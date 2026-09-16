@@ -1,0 +1,269 @@
+// Aditya Group CRM — Prisma schema
+// Supabase Postgres. All tables prefixed with crm_ to avoid conflicts with Supabase built-ins.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===================== Master =====================
+
+model CrmDealer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String   @unique
+  brand     String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  brands CrmBrand[]
+  users  CrmUser[]
+  leads  CrmLead[]
+
+  @@map("crm_dealers")
+}
+
+model CrmBrand {
+  id        Int      @id @default(autoincrement())
+  name      String
+  dealerId  Int      @map("dealer_id")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  dealer CrmDealer @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  models CrmModel[]
+  leads  CrmLead[]
+
+  @@map("crm_brands")
+}
+
+model CrmModel {
+  id         Int       @id @default(autoincrement())
+  name       String
+  brandId    Int       @map("brand_id")
+  active     Boolean   @default(true)
+  recycledAt DateTime? @map("recycled_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  brand CrmBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  leads CrmLead[]
+
+  @@index([recycledAt])
+  @@map("crm_models")
+}
+
+model CrmEnquiryCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  types CrmEnquiryType[]
+  leads CrmLead[]
+
+  @@map("crm_enquiry_categories")
+}
+
+model CrmEnquiryType {
+  id         Int      @id @default(autoincrement())
+  name       String
+  categoryId Int      @map("category_id")
+  department String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  category CrmEnquiryCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  leads    CrmLead[]
+  users    CrmUserEnquiryType[]
+
+  @@unique([name, categoryId])
+  @@map("crm_enquiry_types")
+}
+
+// ===================== Users =====================
+
+model CrmUser {
+  id            Int       @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  phone         String?
+  passwordHash  String   @map("password_hash")
+  role          String
+  dealerId      Int?      @map("dealer_id")
+  department    String?
+  active        Boolean   @default(true)
+  emailVerified Boolean   @default(false) @map("email_verified")
+  recycledAt    DateTime? @map("recycled_at")
+  lastLoginAt   DateTime? @map("last_login_at")
+  lastActiveAt  DateTime  @default(now()) @map("last_active_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  dealer            CrmDealer?           @relation(fields: [dealerId], references: [id], onDelete: SetNull)
+  enquiryTypes      CrmUserEnquiryType[]
+  leadsAssigned     CrmLead[]            @relation("CrmLeadAssignedUser")
+  leadsCreated      CrmLead[]            @relation("CrmLeadCreatedBy")
+  loginHistory      CrmLoginHistory[]
+  leadActivities    CrmLeadActivity[]
+  leadFollowups     CrmLeadFollowup[]
+  departmentUpdates CrmDepartmentUpdate[]
+  supportTickets    CrmSupportTicket[]
+
+  @@index([recycledAt])
+  @@map("crm_users")
+}
+
+model CrmUserEnquiryType {
+  id            Int @id @default(autoincrement())
+  userId        Int @map("user_id")
+  enquiryTypeId Int @map("enquiry_type_id")
+
+  user        CrmUser         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enquiryType CrmEnquiryType  @relation(fields: [enquiryTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, enquiryTypeId])
+  @@map("crm_user_enquiry_types")
+}
+
+model CrmLoginHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  email     String?
+  action    String
+  ip        String?
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user CrmUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("crm_login_history")
+}
+
+model CrmSupportTicket {
+  id          Int      @id @default(autoincrement())
+  token       String   @unique
+  userId      Int      @map("user_id")
+  subject     String
+  description String
+  route       String?
+  userAgent   String?  @map("user_agent")
+  status      String   @default("open")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  user CrmUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("crm_support_tickets")
+}
+
+model CrmOtpCode {
+  id        Int      @id @default(autoincrement())
+  email     String
+  code      String
+  purpose   String   @default("login")
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("crm_otp_codes")
+}
+
+// ===================== Leads =====================
+
+model CrmLead {
+  id                 Int       @id @default(autoincrement())
+  leadCode           String    @unique @map("lead_code")
+  customerName       String    @map("customer_name")
+  mobile             String
+  secondaryNumber    String?   @map("secondary_number")
+  email              String?
+  location           String?
+  source             String?
+  referralCustomerName String?  @map("referral_customer_name")
+  dealerId           Int       @map("dealer_id")
+  brandId            Int?      @map("brand_id")
+  modelId            Int?      @map("model_id")
+  variant            String?
+  registrationNumber String?   @map("registration_number")
+  enquiryCategoryId  Int       @map("enquiry_category_id")
+  enquiryTypeId      Int       @map("enquiry_type_id")
+  department         String
+  assignedUserId     Int?      @map("assigned_user_id")
+  priority           String    @default("Medium")
+  status             String    @default("new")
+  initialRemarks     String?   @map("initial_remarks")
+  nextFollowupDate   DateTime? @map("next_followup_date")
+  createdBy          Int       @map("created_by")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at")
+  closedAt           DateTime? @map("closed_at")
+
+  dealer          CrmDealer          @relation(fields: [dealerId], references: [id])
+  brand           CrmBrand?          @relation(fields: [brandId], references: [id])
+  model           CrmModel?          @relation(fields: [modelId], references: [id])
+  enquiryCategory CrmEnquiryCategory @relation(fields: [enquiryCategoryId], references: [id])
+  enquiryType     CrmEnquiryType     @relation(fields: [enquiryTypeId], references: [id])
+  assignedUser    CrmUser?           @relation("CrmLeadAssignedUser", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  createdByUser   CrmUser            @relation("CrmLeadCreatedBy", fields: [createdBy], references: [id])
+  activities        CrmLeadActivity[]
+  followups         CrmLeadFollowup[]
+  departmentUpdates CrmDepartmentUpdate[]
+
+  @@index([assignedUserId])
+  @@index([dealerId])
+  @@index([status])
+  @@index([department])
+  @@index([createdAt])
+  @@map("crm_leads")
+}
+
+model CrmLeadActivity {
+  id        Int      @id @default(autoincrement())
+  leadId    Int      @map("lead_id")
+  userId    Int?     @map("user_id")
+  action    String
+  details   Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lead CrmLead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user CrmUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([leadId])
+  @@map("crm_lead_activities")
+}
+
+model CrmLeadFollowup {
+  id               Int       @id @default(autoincrement())
+  leadId           Int       @map("lead_id")
+  userId           Int       @map("user_id")
+  followupDate     DateTime  @default(now()) @map("followup_date")
+  remarks          String?
+  nextFollowupDate DateTime? @map("next_followup_date")
+  outcome          String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  lead CrmLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user CrmUser @relation(fields: [userId], references: [id])
+
+  @@index([leadId])
+  @@map("crm_lead_followups")
+}
+
+model CrmDepartmentUpdate {
+  id         Int      @id @default(autoincrement())
+  leadId     Int      @map("lead_id")
+  userId     Int      @map("user_id")
+  department String
+  data       Json
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  lead CrmLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user CrmUser @relation(fields: [userId], references: [id])
+
+  @@index([leadId])
+  @@map("crm_department_updates")
+}

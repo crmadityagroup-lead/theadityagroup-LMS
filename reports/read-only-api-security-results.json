@@ -1,0 +1,653 @@
+{
+  "executedAt": "2026-09-07T05:28:33.789Z",
+  "results": [
+    {
+      "name": "Unauthenticated auth/me rejected",
+      "method": "GET",
+      "url": "/api/auth/me",
+      "expected": 401,
+      "actual": 401,
+      "result": "PASS",
+      "evidence": "Not authenticated"
+    },
+    {
+      "name": "Unauthenticated lead list rejected",
+      "method": "GET",
+      "url": "/api/leads?limit=1",
+      "expected": 401,
+      "actual": 401,
+      "result": "PASS",
+      "evidence": "Not authenticated"
+    },
+    {
+      "name": "Unauthenticated dashboard rejected",
+      "method": "GET",
+      "url": "/api/dashboard",
+      "expected": 401,
+      "actual": 401,
+      "result": "PASS",
+      "evidence": "Not authenticated"
+    },
+    {
+      "name": "Invalid signed JWT rejected",
+      "method": "GET",
+      "url": "/api/leads?limit=1",
+      "expected": 401,
+      "actual": 401,
+      "result": "PASS",
+      "evidence": "Not authenticated"
+    },
+    {
+      "name": "super_admin auth/me",
+      "method": "GET",
+      "url": "/api/auth/me",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "super_admin dashboard",
+      "method": "GET",
+      "url": "/api/dashboard",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "super_admin lead list",
+      "method": "GET",
+      "url": "/api/leads?limit=2",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "super_admin reports",
+      "method": "GET",
+      "url": "/api/reports/summary",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "super_admin search minimum query",
+      "method": "GET",
+      "url": "/api/search?q=qa",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "super_admin notifications",
+      "method": "GET",
+      "url": "/api/notifications",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "admin auth/me",
+      "method": "GET",
+      "url": "/api/auth/me",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "admin dashboard",
+      "method": "GET",
+      "url": "/api/dashboard",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "admin lead list",
+      "method": "GET",
+      "url": "/api/leads?limit=2",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "admin reports",
+      "method": "GET",
+      "url": "/api/reports/summary",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "admin search minimum query",
+      "method": "GET",
+      "url": "/api/search?q=qa",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "admin notifications",
+      "method": "GET",
+      "url": "/api/notifications",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "data_operator_1 auth/me",
+      "method": "GET",
+      "url": "/api/auth/me",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "data_operator_1 dashboard",
+      "method": "GET",
+      "url": "/api/dashboard",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "data_operator_1 lead list",
+      "method": "GET",
+      "url": "/api/leads?limit=2",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "data_operator_1 reports",
+      "method": "GET",
+      "url": "/api/reports/summary",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "data_operator_1 search minimum query",
+      "method": "GET",
+      "url": "/api/search?q=qa",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "data_operator_1 notifications",
+      "method": "GET",
+      "url": "/api/notifications",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "data_operator_2 auth/me",
+      "method": "GET",
+      "url": "/api/auth/me",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "data_operator_2 dashboard",
+      "method": "GET",
+      "url": "/api/dashboard",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "data_operator_2 lead list",
+      "method": "GET",
+      "url": "/api/leads?limit=2",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "data_operator_2 reports",
+      "method": "GET",
+      "url": "/api/reports/summary",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "data_operator_2 search minimum query",
+      "method": "GET",
+      "url": "/api/search?q=qa",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "data_operator_2 notifications",
+      "method": "GET",
+      "url": "/api/notifications",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "department_user auth/me",
+      "method": "GET",
+      "url": "/api/auth/me",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "department_user dashboard",
+      "method": "GET",
+      "url": "/api/dashboard",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "department_user lead list",
+      "method": "GET",
+      "url": "/api/leads?limit=2",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "department_user reports",
+      "method": "GET",
+      "url": "/api/reports/summary",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "department_user search minimum query",
+      "method": "GET",
+      "url": "/api/search?q=qa",
+      "expected": 200,
+      "actual": 200,
+      "result": "PASS",
+      "evidence": null
+    },
+    {
+      "name": "department_user notifications",
+      "method": "GET",
+      "url": "/api/notifications",
+      "expected": 200,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "DO2 cross-dealer lead detail denied (operator 6)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "DO2 cross-dealer lead detail denied (operator 5)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "DO2 cross-dealer lead detail denied (operator 88)",
+      "method": "GET",
+      "url": "/api/leads/5",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "DO2 cross-dealer lead detail denied (operator 44)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 7)",
+      "method": "GET",
+      "url": "/api/leads/2",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 16)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 31)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 17)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 8)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 18)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 11)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 19)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 14)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 13)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 20)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 22)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 89)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 23)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 26)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 27)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 28)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 29)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 30)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 12)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 32)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 33)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 34)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 35)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 36)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 10)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 25)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 9)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 43)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 50)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 21)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 15)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 40)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    },
+    {
+      "name": "Department-user out-of-scope detail denied (user 67)",
+      "method": "GET",
+      "url": "/api/leads/1",
+      "expected": 403,
+      "actual": "NO_RESPONSE",
+      "result": "BLOCKED",
+      "evidence": "TimeoutError"
+    }
+  ]
+}
