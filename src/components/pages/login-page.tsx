@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,10 +78,13 @@ export function LoginPage() {
     <div className="min-h-screen bg-background p-3 sm:p-5 lg:p-7">
       <div className="neo-login-shell mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1440px] overflow-hidden rounded-sm border-2 border-foreground lg:grid-cols-2 lg:min-h-[calc(100vh-3.5rem)]">
         <section className="relative hidden min-h-[620px] overflow-hidden border-r-2 border-white bg-black lg:flex lg:items-center lg:justify-center">
-          <iframe
-            title="Aditya Group animation"
-            src="https://lottie.host/embed/8f59c311-a33b-4fa2-ae1e-6097e61ec5c4/2zJtzuxG1G.json"
-            className="h-[460px] w-[460px] max-w-[80%] border-0"
+          <Image
+            src="/Pin%20code%20Password%20Protection%2C%20Secure%20Login%20animation.svg"
+            alt="Secure login animation"
+            width={460}
+            height={460}
+            priority
+            className="h-[460px] w-[460px] max-w-[80%] object-contain"
           />
         </section>
         <section className="relative flex min-h-screen items-center justify-center bg-background px-4 py-20 sm:px-8 lg:min-h-0 lg:px-16">

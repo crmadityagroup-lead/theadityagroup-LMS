@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
+  poweredByHeader: false,
+  productionBrowserSourceMaps: false,
   typescript: {
     ignoreBuildErrors: true,
   },

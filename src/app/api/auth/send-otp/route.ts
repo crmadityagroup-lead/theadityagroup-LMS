@@ -28,11 +28,23 @@ export async function POST(req: NextRequest) {
     await db.crmOtpCode.deleteMany({ where: { email } });
     await db.crmOtpCode.create({ data: { email, code, purpose: 'login', expiresAt: new Date(Date.now() + ttl * 60 * 1000) } });
 
-    // Persist the OTP first, then send mail in the background so SMTP latency
-    // does not block the login screen or make the user request another code.
-    void sendOtpEmail(email, code, user.name).catch((e: any) => {
-      console.error('[auth] otp email failed', e.message);
-    });
+    // Do not report success until the mail provider has accepted the message.
+    // A background send made the UI show a false "OTP sent" message when both
+    // SMTP mailboxes were unavailable in production.
+    try {
+      await sendOtpEmail(email, code, user.name);
+    } catch (mailError: any) {
+      await db.crmOtpCode.deleteMany({ where: { email, code, purpose: 'login' } });
+      console.error('[auth] otp email failed', {
+        code: mailError?.code,
+        command: mailError?.command,
+        message: mailError?.message,
+      });
+      return NextResponse.json(
+        { error: 'We could not send the OTP right now. Please try again shortly.' },
+        { status: 502 },
+      );
+    }
     return NextResponse.json({ message: `OTP sent to ${email}. Valid for ${ttl} minutes.`, ttl_minutes: ttl });
   } catch (err: any) {
     console.error('[auth] send-otp error', err);

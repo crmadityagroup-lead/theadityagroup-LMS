@@ -4,12 +4,18 @@ import nodemailer from 'nodemailer';
 let transporter: nodemailer.Transporter | null = null;
 let backupTransporter: nodemailer.Transporter | null = null;
 
+function smtpSecure(port: number, configuredValue?: string) {
+  if (configuredValue?.trim()) return configuredValue.trim().toLowerCase() === 'true';
+  return port === 465;
+}
+
 function getTransporter() {
   if (transporter) return transporter;
+  const port = parseInt(process.env.SMTP_PORT || '587', 10);
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: false,
+    port,
+    secure: smtpSecure(port, process.env.SMTP_SECURE),
     pool: true,
     maxConnections: 3,
     connectionTimeout: 5000,
@@ -26,10 +32,11 @@ function getTransporter() {
 function getBackupTransporter() {
   if (backupTransporter) return backupTransporter;
   if (!process.env.SMTP_BACKUP_USER || !process.env.SMTP_BACKUP_PASS) return null;
+  const port = parseInt(process.env.SMTP_BACKUP_PORT || process.env.SMTP_PORT || '587', 10);
   backupTransporter = nodemailer.createTransport({
     host: process.env.SMTP_BACKUP_HOST || process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_BACKUP_PORT || process.env.SMTP_PORT || '587', 10),
-    secure: false,
+    port,
+    secure: smtpSecure(port, process.env.SMTP_BACKUP_SECURE || process.env.SMTP_SECURE),
     pool: true,
     maxConnections: 2,
     connectionTimeout: 5000,
