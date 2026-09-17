@@ -1,0 +1,18 @@
+{
+  "name": "Aditya Group CRM",
+  "short_name": "Aditya CRM",
+  "description": "Aditya Group lead management portal",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#d89b27",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

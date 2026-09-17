@@ -156,6 +156,9 @@ export function NotificationsBell() {
           data.notifications.forEach((notification) => {
             if (!knownIds.current.has(notification.id)) {
               notificationChannel.current?.postMessage({ notification });
+              // BroadcastChannel does not deliver messages back to the same tab.
+              // Show the system notification here as well, not only in other tabs.
+              void showBrowserNotification(notification);
             }
           });
         }

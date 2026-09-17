@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   description: "Lead Lifecycle & Department Dashboard — Aditya Group (Mahindra · Hyundai · Honda)",
   keywords: ["Aditya Group", "CRM", "Lead Management"],
   authors: [{ name: "Aditya Group" }],
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Aditya Group CRM",
+    statusBarStyle: "default",
+  },
   icons: {
     icon: "/favicon.png",
     apple: "/favicon.png",

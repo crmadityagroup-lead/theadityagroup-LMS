@@ -1,3 +1,9 @@
+self.addEventListener('install', () => self.skipWaiting());
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 self.addEventListener('push', (event) => {
   let data = { title: 'Aditya Group CRM', body: 'You have a new CRM update.', url: '/' };
   try { if (event.data) data = { ...data, ...event.data.json() }; } catch {}
@@ -18,5 +24,4 @@ self.addEventListener('notificationclick', (event) => {
     return self.clients.openWindow(url);
   }));
 });
-
 
