@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
     setLeadAssignees(outcome.leadId!, assignedUserIds.length ? assignedUserIds : [primaryAssigneeId]),
   ]);
   try {
-    await sendPushToLeadUsers(outcome.leadId!, user.id, { title: 'New CRM Lead', body: 'A new lead was assigned to your team.' });
+    await sendPushToLeadUsers(outcome.leadId!, user.id, { title: 'New CRM Lead Assigned', body: 'A new lead was assigned to your team.', assignment: true });
   } catch (error) {
     console.error('Push delivery failed after lead creation:', error);
   }

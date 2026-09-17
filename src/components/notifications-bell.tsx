@@ -18,6 +18,8 @@ interface Notification {
   dealer_name?: string;
   brand_name?: string;
   model_name?: string;
+  enquiry_type?: string;
+  department?: string;
   assigned_user_name?: string;
   assigned_by_name?: string;
   actor_name?: string;
@@ -297,7 +299,7 @@ export function NotificationsBell() {
   }
 
   function notificationMessage(n: Notification) {
-    if (n.type === 'lead_assigned') return `${n.assigned_by_name || 'A user'} assigned this lead to ${n.assigned_user_name || 'you'}`;
+    if (n.type === 'lead_assigned') return `${n.assigned_by_name || 'A user'} assigned this lead to ${n.assigned_user_name || 'you'}${n.enquiry_type ? ` • Enquiry: ${n.enquiry_type}` : ''}${n.department ? ` • Department: ${n.department}` : ''}`;
     if (n.type === 'lead_status_changed') return `${n.customer_name || 'Customer'}'s lead status changed from ${(n.from_status || 'previous status').replaceAll('_', ' ')} to ${(n.to_status || 'updated status').replaceAll('_', ' ')} by ${n.actor_name || 'a user'}`;
     if (n.type === 'lead_remark_added') return `${n.actor_name || 'A user'} added a remark${n.remark ? `: ${n.remark}` : ''}`;
     return n.message;
@@ -336,6 +338,7 @@ export function NotificationsBell() {
                       <div className="mt-1 text-xs text-muted-foreground">
                         {n.customer_name || 'Lead'}{n.mobile ? ` - ${n.mobile}` : ''}{n.dealer_name ? ` - ${n.dealer_name}` : ''}
                         {n.brand_name || n.model_name ? ` - ${[n.brand_name, n.model_name].filter(Boolean).join(' / ')}` : ''}
+                        {n.enquiry_type ? ` - Enquiry: ${n.enquiry_type}` : ''}{n.department ? ` - Department: ${n.department}` : ''}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString('en-IN')}</div>
                     </button>

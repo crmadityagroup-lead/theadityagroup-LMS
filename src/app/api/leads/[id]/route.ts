@@ -140,7 +140,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (requestedAssignees.length > 0) await setLeadAssignees(leadId, requestedAssignees);
   if (Object.keys(updates).length > 0 || requestedAssignees.length > 0) {
     try {
-      await sendPushToLeadUsers(leadId, user.id, { title: 'CRM Lead Updated', body: 'A lead assigned to your team was updated.' });
+      await sendPushToLeadUsers(leadId, user.id, {
+        title: requestedAssignees.length > 0 ? 'CRM Lead Assigned' : 'CRM Lead Updated',
+        body: requestedAssignees.length > 0 ? 'A lead was assigned to your team.' : 'A lead assigned to your team was updated.',
+        assignment: requestedAssignees.length > 0,
+      });
     } catch (error) {
       console.error('Push delivery failed after lead update:', error);
     }

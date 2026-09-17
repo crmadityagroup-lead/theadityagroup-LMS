@@ -64,7 +64,7 @@ export async function GET(req: Request) {
     where,
     take: 50,
     orderBy: { createdAt: 'desc' },
-    select: { id: true, leadCode: true, customerName: true, createdAt: true, status: true, priority: true, department: true, dealer: { select: { name: true } } },
+    select: { id: true, leadCode: true, customerName: true, createdAt: true, status: true, priority: true, department: true, dealer: { select: { name: true } }, enquiryType: { select: { name: true } } },
   });
   const newLeadNotifications = newLeads.map((l: any) => ({
     id: `lead_${l.id}`,
@@ -74,6 +74,7 @@ export async function GET(req: Request) {
     customer_name: l.customerName,
     dealer_name: l.dealer?.name || null,
     department: l.department,
+    enquiry_type: l.enquiryType?.name || null,
     priority: l.priority,
     status: l.status,
     created_at: l.createdAt,
@@ -90,7 +91,7 @@ export async function GET(req: Request) {
         id: true,
         createdAt: true,
       user: { select: { name: true } },
-      lead: { select: { id: true, leadCode: true, customerName: true, mobile: true, department: true, priority: true, status: true, assignedUser: { select: { name: true } }, dealer: { select: { name: true } }, brand: { select: { name: true } }, model: { select: { name: true } } } },
+      lead: { select: { id: true, leadCode: true, customerName: true, mobile: true, department: true, priority: true, status: true, assignedUser: { select: { name: true } }, dealer: { select: { name: true } }, brand: { select: { name: true } }, model: { select: { name: true } }, enquiryType: { select: { name: true } } } },
     },
   });
   const assignmentNotifications = assignments.map((activity: any) => ({
@@ -107,6 +108,7 @@ export async function GET(req: Request) {
     assigned_user_name: activity.lead.assignedUser?.name || null,
     assigned_by_name: activity.user?.name || null,
     department: activity.lead.department,
+    enquiry_type: activity.lead.enquiryType?.name || null,
     priority: activity.lead.priority,
     status: activity.lead.status,
     created_at: activity.createdAt,
