@@ -1,15 +1,17 @@
 import { NextRequest } from 'next/server';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import PDFDocument from 'pdfkit';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import { buildLeadFilters, LeadFilterError } from '@/lib/lead-filters';
+
+export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return new Response('Not authenticated', { status: 401 });
   if (user.role === 'department_user') return new Response('Reports are not available for Department Users', { status: 403 });
-  const { default: PDFKit } = await import('pdfkit');
   let where;
   try { where = buildLeadFilters(user, req.nextUrl.searchParams); }
   catch (error) { return new Response(error instanceof LeadFilterError ? error.message : 'Invalid filters', { status: 400 }); }
@@ -21,7 +23,7 @@ export async function GET(req: NextRequest) {
   let logo: Buffer | null = null;
   try { logo = readFileSync(join(process.cwd(), 'public', 'logo-light.png')); } catch { /* Keep report generation available if the asset is missing. */ }
 
-  const doc = new (PDFKit as any)({ size: 'A4', layout: 'landscape', margin: 28, bufferPages: true, autoFirstPage: false });
+  const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 28, bufferPages: true, autoFirstPage: false });
   const chunks: Buffer[] = [];
   doc.on('data', (chunk: Buffer) => chunks.push(chunk));
   const done = new Promise<Buffer>((resolve) => doc.on('end', () => resolve(Buffer.concat(chunks))));
