@@ -1,6 +1,6 @@
 {
-  "name": "Aditya Group CRM",
-  "short_name": "Aditya CRM",
+  "name": "Lead Management",
+  "short_name": "Lead Management",
   "description": "Aditya Group lead management portal",
   "start_url": "/",
   "scope": "/",

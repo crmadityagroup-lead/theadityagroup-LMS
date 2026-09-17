@@ -47,14 +47,24 @@ export function LoginPage() {
 
   useEffect(() => {
     const isMobile = /Android|iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (!isMobile) return;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    if (!isMobile || isStandalone) return;
     setShowInstallHelp(true);
     const handleInstallPrompt = (event: Event) => {
       event.preventDefault();
       setInstallPrompt(event as BeforeInstallPromptEvent);
     };
+    const handleAppInstalled = () => {
+      setInstallPrompt(null);
+      setShowInstallHelp(false);
+      toast.success('CRM app installed successfully.');
+    };
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
   }, []);
 
   async function installApp() {
@@ -64,6 +74,7 @@ export function LoginPage() {
       if (choice.outcome === 'accepted') {
         toast.success('CRM app installation started.');
         setInstallPrompt(null);
+        setShowInstallHelp(false);
       }
       return;
     }

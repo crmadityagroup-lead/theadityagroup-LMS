@@ -6,14 +6,14 @@ import { ThemeColorApplier } from "@/components/theme-customizer";
 import { RightClickGuard } from "@/components/right-click-guard";
 
 export const metadata: Metadata = {
-  title: "Aditya Group CRM Portal",
+  title: "Lead Management",
   description: "Lead Lifecycle & Department Dashboard — Aditya Group (Mahindra · Hyundai · Honda)",
   keywords: ["Aditya Group", "CRM", "Lead Management"],
   authors: [{ name: "Aditya Group" }],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Aditya Group CRM",
+    title: "Lead Management",
     statusBarStyle: "default",
   },
   icons: {
