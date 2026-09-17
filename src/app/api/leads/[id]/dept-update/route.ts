@@ -62,6 +62,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       : Promise.resolve(),
     activityWrites.length > 0 ? Promise.all(activityWrites) : Promise.resolve(),
   ]);
-  void sendPushToLeadUsers(leadId, user.id, { title: 'CRM Activity Updated', body: 'A department update was added to a lead.' }).catch(() => {});
+  try {
+    await sendPushToLeadUsers(leadId, user.id, { title: 'CRM Activity Updated', body: 'A department update was added to a lead.' });
+  } catch (error) {
+    console.error('Push delivery failed after department update:', error);
+  }
   return NextResponse.json({ update: update ? { id: update.id } : null, message: 'Department update saved' }, { status: 201 });
 }

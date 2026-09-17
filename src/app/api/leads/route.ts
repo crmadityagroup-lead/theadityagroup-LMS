@@ -173,11 +173,16 @@ export async function POST(req: NextRequest) {
 
   // Write activities after the lead transaction commits so a slow database cannot
   // invalidate the transaction while recording the audit trail.
-  void Promise.all([
+  await Promise.all([
     db.crmLeadActivity.create({ data: { leadId: outcome.leadId!, userId: user.id, action: 'created', details: { message: `Lead created and assigned to user #${primaryAssigneeId}`, priority: b.priority } } }),
     db.crmLeadActivity.create({ data: { leadId: outcome.leadId!, userId: user.id, action: 'assigned', details: { assigned_to: assignedUserIds.length ? assignedUserIds : [primaryAssigneeId], department } } }),
     setLeadAssignees(outcome.leadId!, assignedUserIds.length ? assignedUserIds : [primaryAssigneeId]),
-  ]).then(() => sendPushToLeadUsers(outcome.leadId!, user.id, { title: 'New CRM Lead', body: 'A new lead was assigned to your team.' })).catch((error) => console.error('Lead activity/push write failed after lead creation:', error));
+  ]);
+  try {
+    await sendPushToLeadUsers(outcome.leadId!, user.id, { title: 'New CRM Lead', body: 'A new lead was assigned to your team.' });
+  } catch (error) {
+    console.error('Push delivery failed after lead creation:', error);
+  }
 
   // Send lead email only for Complain /Concern without delaying the form response.
   void (async () => {

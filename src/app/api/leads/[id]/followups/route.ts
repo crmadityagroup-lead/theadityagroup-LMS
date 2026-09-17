@@ -32,6 +32,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const newStatus = ['new', 'in_progress'].includes(lead.status) ? 'follow_up' : lead.status;
     await db.crmLead.update({ where: { id: leadId }, data: { nextFollowupDate: new Date(b.next_followup_date), status: newStatus, updatedAt: new Date() } });
   }
-  void sendPushToLeadUsers(leadId, user.id, { title: 'Follow-up Added', body: 'A new follow-up was added to a lead.' }).catch(() => {});
+  try {
+    await sendPushToLeadUsers(leadId, user.id, { title: 'Follow-up Added', body: 'A new follow-up was added to a lead.' });
+  } catch (error) {
+    console.error('Push delivery failed after follow-up:', error);
+  }
   return NextResponse.json({ followup: { id: followup.id }, message: 'Follow-up added' }, { status: 201 });
 }

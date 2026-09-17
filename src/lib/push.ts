@@ -17,12 +17,19 @@ export async function ensurePushTable() {
 }
 
 let configured = false;
+let configurationWarningLogged = false;
 function configure() {
   if (configured) return true;
   const subject = process.env.VAPID_SUBJECT;
   const publicKey = process.env.VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
-  if (!subject || !publicKey || !privateKey) return false;
+  if (!subject || !publicKey || !privateKey) {
+    if (!configurationWarningLogged) {
+      console.error('[push] VAPID_SUBJECT, VAPID_PUBLIC_KEY, and VAPID_PRIVATE_KEY must be configured.');
+      configurationWarningLogged = true;
+    }
+    return false;
+  }
   webpush.setVapidDetails(subject, publicKey, privateKey);
   configured = true;
   return true;
@@ -50,7 +57,7 @@ export async function sendPushToLeadUsers(leadId: number, actorId: number, paylo
       await webpush.sendNotification({ endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } }, JSON.stringify({ ...payload, url: '/' }));
     } catch (error: any) {
       if ([404, 410].includes(error?.statusCode)) await db.$executeRaw(Prisma.sql`DELETE FROM crm_push_subscriptions WHERE id = ${subscription.id}`).catch(() => {});
+      else console.error('[push] Delivery failed:', { statusCode: error?.statusCode, message: error?.message });
     }
   }));
 }
-

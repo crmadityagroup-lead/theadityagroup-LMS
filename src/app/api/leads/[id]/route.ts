@@ -138,7 +138,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await db.crmLead.update({ where: { id: leadId }, data: updates });
   }
   if (requestedAssignees.length > 0) await setLeadAssignees(leadId, requestedAssignees);
-  if (Object.keys(updates).length > 0 || requestedAssignees.length > 0) void sendPushToLeadUsers(leadId, user.id, { title: 'CRM Lead Updated', body: 'A lead assigned to your team was updated.' }).catch(() => {});
+  if (Object.keys(updates).length > 0 || requestedAssignees.length > 0) {
+    try {
+      await sendPushToLeadUsers(leadId, user.id, { title: 'CRM Lead Updated', body: 'A lead assigned to your team was updated.' });
+    } catch (error) {
+      console.error('Push delivery failed after lead update:', error);
+    }
+  }
   const updated = await fetchLeadDetail(leadId);
   return NextResponse.json({ lead: updated, message: 'Lead updated' });
 }
