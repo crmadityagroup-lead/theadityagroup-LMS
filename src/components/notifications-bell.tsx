@@ -133,12 +133,12 @@ export function NotificationsBell() {
     try {
       const registration = await navigator.serviceWorker?.ready;
       if (registration) {
-        await registration.showNotification(title, { body, icon: '/favicon.png', badge: '/favicon.png', data: { url: '/' } });
+        await registration.showNotification(title, { body, icon: '/app-icon-512.png', badge: '/app-icon-192.png', data: { url: '/' } });
       } else {
-        new window.Notification(title, { body, icon: '/favicon.png' });
+        new window.Notification(title, { body, icon: '/app-icon-512.png' });
       }
     } catch {
-      try { new window.Notification(title, { body, icon: '/favicon.png' }); } catch {}
+      try { new window.Notification(title, { body, icon: '/app-icon-512.png' }); } catch {}
     }
   }
 

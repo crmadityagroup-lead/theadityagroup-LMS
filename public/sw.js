@@ -9,8 +9,8 @@ self.addEventListener('push', (event) => {
   try { if (event.data) data = { ...data, ...event.data.json() }; } catch {}
   event.waitUntil(self.registration.showNotification(data.title, {
     body: data.body,
-    icon: '/favicon.png',
-    badge: '/favicon.png',
+    icon: '/app-icon-512.png',
+    badge: '/app-icon-192.png',
     data: { url: data.url },
   }));
 });
@@ -24,4 +24,3 @@ self.addEventListener('notificationclick', (event) => {
     return self.clients.openWindow(url);
   }));
 });
-
