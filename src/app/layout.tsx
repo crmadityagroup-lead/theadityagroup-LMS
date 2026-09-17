@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeColorApplier } from "@/components/theme-customizer";
+import { RightClickGuard } from "@/components/right-click-guard";
 
 export const metadata: Metadata = {
   title: "Aditya Group CRM Portal",
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning className="font-sans antialiased bg-background text-foreground">
+        <RightClickGuard />
         <ThemeColorApplier />
         {children}
         <Toaster />

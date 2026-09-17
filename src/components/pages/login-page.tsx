@@ -19,14 +19,24 @@ export function LoginPage() {
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(0);
+  const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
   const sendingRef = useRef(false);
   const verifyingRef = useRef(false);
 
   useEffect(() => {
-    if (secondsRemaining <= 0) return;
-    const timer = window.setInterval(() => setSecondsRemaining((seconds) => Math.max(0, seconds - 1)), 1000);
+    if (!otpExpiresAt) return;
+
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.ceil((otpExpiresAt - Date.now()) / 1000));
+      setSecondsRemaining(remaining);
+
+      if (remaining === 0) setOtpExpiresAt(null);
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(timer);
-  }, [secondsRemaining]);
+  }, [otpExpiresAt]);
 
   async function sendOtp() {
     if (sendingRef.current || secondsRemaining > 0) return;
@@ -42,7 +52,10 @@ export function LoginPage() {
       toast.success(res.message || 'OTP sent');
       setStep('otp');
       const ttlMinutes = Number(res.ttl_minutes || 2);
-      setSecondsRemaining(Math.max(60, ttlMinutes * 60));
+      const ttlSeconds = Math.max(60, ttlMinutes * 60);
+      setCode('');
+      setSecondsRemaining(ttlSeconds);
+      setOtpExpiresAt(Date.now() + ttlSeconds * 1000);
     } catch (e: any) {
       toast.error(e.message || 'Failed to send OTP');
     } finally {
