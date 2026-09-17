@@ -4,8 +4,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
-  // PDFKit relies on Node.js built-ins and must remain a server dependency.
-  serverExternalPackages: ["pdfkit"],
   typescript: {
     ignoreBuildErrors: true,
   },
