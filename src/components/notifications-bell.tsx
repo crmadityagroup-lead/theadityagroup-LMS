@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Bell, BellRing, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api-client';
+import { toast } from 'sonner';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
@@ -70,22 +71,44 @@ export function NotificationsBell() {
   }, []);
 
   async function enablePush() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      toast.error('Push notifications are not supported by this browser.');
+      return;
+    }
+    if (isIos && !isStandalone) {
+      toast.error('On iPhone, add the CRM to the Home Screen and open it from that icon before enabling notifications.');
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      toast.error('Notifications are blocked. Enable them in this site’s browser settings, then try again.');
+      return;
+    }
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!vapidPublicKey) {
+      toast.error('Push notifications are not configured yet. Please contact your administrator.');
+      return;
+    }
     try {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         setPushEnabled(false);
         try { localStorage.removeItem(pushStorageKey); } catch {}
+        toast.error('Notification permission was not allowed.');
         return;
       }
-      // Reflect the browser permission immediately; service-worker setup can
-      // take a moment and should not leave the control stuck on Enable.
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      const subscription = await registration.pushManager.getSubscription()
+        ?? await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKeyToBytes(vapidPublicKey) });
+      await api.post('/push/subscribe', { subscription });
       setPushEnabled(true);
       try { localStorage.setItem(pushStorageKey, 'true'); } catch {}
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKeyToBytes(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '') });
-      await api.post('/push/subscribe', { subscription });
-    } catch (error) { console.warn('[notifications] push setup failed', error); }
+      toast.success('Mobile notifications are enabled.');
+    } catch (error) {
+      console.warn('[notifications] push setup failed', error);
+      toast.error('Could not enable notifications. Check the browser permission and try again.');
+    }
   }
 
   useEffect(() => {
