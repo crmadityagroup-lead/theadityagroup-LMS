@@ -9,7 +9,12 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth, CrmUser } from '@/lib/auth-context';
 import { Logo } from '@/components/logo';
-import { ArrowRight, CheckCircle2, LockKeyhole, Mail } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Download, LockKeyhole, Mail } from 'lucide-react';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 export function LoginPage() {
   const { refresh, setUserDirect } = useAuth();
@@ -20,6 +25,8 @@ export function LoginPage() {
   const [verifying, setVerifying] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(0);
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallHelp, setShowInstallHelp] = useState(false);
   const sendingRef = useRef(false);
   const verifyingRef = useRef(false);
 
@@ -37,6 +44,34 @@ export function LoginPage() {
     const timer = window.setInterval(updateCountdown, 1000);
     return () => window.clearInterval(timer);
   }, [otpExpiresAt]);
+
+  useEffect(() => {
+    const isMobile = /Android|iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (!isMobile) return;
+    setShowInstallHelp(true);
+    const handleInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+  }, []);
+
+  async function installApp() {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        toast.success('CRM app installation started.');
+        setInstallPrompt(null);
+      }
+      return;
+    }
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    toast.message(isIos
+      ? 'In Safari, tap Share, then choose Add to Home Screen.'
+      : 'Open your browser menu and choose Install app or Add to Home screen.');
+  }
 
   async function sendOtp() {
     if (sendingRef.current || secondsRemaining > 0) return;
@@ -140,6 +175,9 @@ export function LoginPage() {
                 <Button className="h-12 w-full btn-gold" onClick={sendOtp} disabled={sending}>
                   {sending ? 'Sending secure code...' : <><span>Continue with email</span><ArrowRight className="ml-2 h-4 w-4" /></>}
                 </Button>
+                {showInstallHelp && <Button type="button" variant="outline" className="h-10 w-full" onClick={() => void installApp()}>
+                  <Download className="mr-2 h-4 w-4" /> {installPrompt ? 'Install CRM App' : 'Install on this phone'}
+                </Button>}
                 <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                   <LockKeyhole className="h-3.5 w-3.5" /> Protected with one-time authentication
                 </p>
