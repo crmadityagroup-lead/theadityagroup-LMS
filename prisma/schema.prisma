@@ -89,6 +89,7 @@ model CrmUser {
   name          String
   email         String   @unique
   phone         String?
+  avatarData    String?   @db.Text @map("avatar_data")
   passwordHash  String   @map("password_hash")
   role          String
   dealerId      Int?      @map("dealer_id")

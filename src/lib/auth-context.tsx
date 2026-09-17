@@ -8,6 +8,8 @@ export interface CrmUser {
   id: number;
   name: string;
   email: string;
+  phone?: string | null;
+  avatar_data?: string | null;
   role: string;
   dealer_id: number | null;
   dealer_name?: string | null;

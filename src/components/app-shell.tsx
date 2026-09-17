@@ -20,8 +20,9 @@ import { RecycleBinPage } from '@/components/pages/recycle-bin-page';
 import { ThemePage } from '@/components/pages/theme-page';
 import { BackupPage } from '@/components/pages/backup-page';
 import { SupportTicketsPage } from '@/components/pages/support-tickets-page';
+import { ProfilePage } from '@/components/pages/profile-page';
 import { HelpCenter } from '@/components/help-center';
-import { GeneratedAvatar } from '@/components/generated-avatar';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import {
   LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
@@ -101,6 +102,7 @@ export function AppShell() {
       case 'theme': return normalizeRole(user?.role || '') === 'super_admin' ? <ThemePage /> : <DashboardPage navigate={navigate} />;
       case 'backup': return normalizeRole(user?.role || '') === 'super_admin' ? <BackupPage /> : <DashboardPage navigate={navigate} />;
       case 'support-tickets': return normalizeRole(user?.role || '') === 'super_admin' ? <SupportTicketsPage /> : <DashboardPage navigate={navigate} />;
+      case 'profile': return <ProfilePage navigate={navigate} />;
       default: return <DashboardPage navigate={navigate} />;
     }
   }
@@ -189,9 +191,7 @@ export function AppShell() {
             <UniversalSearch navigate={navigate} />
           </div>
           <div className="flex items-center gap-2 pl-3 border-l border-border">
-            <div className="block h-8 w-8" title={user.name}>
-              <GeneratedAvatar seed={`${user.id}:${user.email}`} name={user.name} size={32} />
-            </div>
+            <ProfileAvatar onClick={() => navigate('profile')} />
             <div className="text-right hidden sm:block">
               <div className="text-sm font-medium leading-tight">{user.name}</div>
               <div className="text-xs text-muted-foreground leading-tight">{user.email}</div>

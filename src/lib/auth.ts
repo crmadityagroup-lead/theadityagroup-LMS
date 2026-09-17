@@ -1,5 +1,6 @@
 // Auth helpers: JWT signing/verification, role checks, scope helpers.
 import jwt from 'jsonwebtoken';
+import { Prisma } from '@prisma/client';
 import { db } from './db';
 import { cookies } from 'next/headers';
 
@@ -16,6 +17,8 @@ export type Role = typeof ROLES[keyof typeof ROLES];
 export interface AuthUser {
   id: number;
   email: string;
+  phone?: string | null;
+  avatar_data?: string | null;
   role: string;
   name: string;
   dealer_id: number | null;
@@ -72,14 +75,19 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   const cached = authCache.get(token);
   if (cached && cached.expiresAt > Date.now()) return cached.user;
   // Refresh from DB
-  const row = await db.crmUser.findUnique({
+  const [row, avatarRows] = await Promise.all([
+    db.crmUser.findUnique({
     where: { id: decoded.id },
-    select: { id: true, name: true, email: true, role: true, dealerId: true, department: true, active: true, emailVerified: true, lastLoginAt: true, lastActiveAt: true, createdAt: true, dealer: { select: { name: true } } },
-  });
+    select: { id: true, name: true, email: true, phone: true, role: true, dealerId: true, department: true, active: true, emailVerified: true, lastLoginAt: true, lastActiveAt: true, createdAt: true, dealer: { select: { name: true } } },
+    }),
+    // Use a raw read for the optional avatar field so deployments with an older
+    // generated Prisma client can still authenticate while rolling out this feature.
+    db.$queryRaw<Array<{ avatar_data: string | null }>>(Prisma.sql`SELECT avatar_data FROM crm_users WHERE id = ${decoded.id}`),
+  ]);
   if (!row || !row.active) return null;
   // Map to snake_case for API response (frontend expects dealer_id, email_verified, etc.)
   const user: AuthUser = {
-    id: row.id, name: row.name, email: row.email, role: row.role,
+    id: row.id, name: row.name, email: row.email, phone: row.phone, avatar_data: avatarRows[0]?.avatar_data || null, role: row.role,
     dealer_id: row.dealerId, dealer_name: row.dealer?.name || null, department: row.department, active: row.active,
     email_verified: row.emailVerified, last_login_at: row.lastLoginAt as any,
     last_active_at: row.lastActiveAt as any, created_at: row.createdAt as any,
