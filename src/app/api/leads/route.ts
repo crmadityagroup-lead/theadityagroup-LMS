@@ -5,7 +5,6 @@ import { validateLeadCascade } from '@/lib/cascade';
 import { getLeadAssignees, setLeadAssignees } from '@/lib/lead-assignees';
 import { sendPushToLeadUsers } from '@/lib/push';
 import { buildLeadFilters, LeadFilterError, normalizeMobile, LEAD_SOURCES } from '@/lib/lead-filters';
-import { sendLeadAssignmentEmail } from '@/lib/mail';
 import { fetchLeadDetail } from '@/lib/lead-detail';
 
 // GET /api/leads — list leads within scope (with filters)
@@ -183,51 +182,6 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Push delivery failed after lead creation:', error);
   }
-
-  // Send lead email only for Complain /Concern without delaying the form response.
-  void (async () => {
-    const [enquiryType, recipients, dealer, category, brand, model] = await Promise.all([
-      db.crmEnquiryType.findUnique({ where: { id: parseInt(b.enquiry_type_id, 10) }, select: { name: true } }),
-      db.crmUser.findMany({ where: { id: { in: assignedUserIds.length ? assignedUserIds : [primaryAssigneeId] }, active: true }, select: { name: true, email: true } }),
-      db.crmDealer.findUnique({ where: { id: dealerId }, select: { name: true } }),
-      db.crmEnquiryCategory.findUnique({ where: { id: parseInt(b.enquiry_category_id, 10) }, select: { name: true } }),
-      b.brand_id ? db.crmBrand.findUnique({ where: { id: parseInt(b.brand_id, 10) }, select: { name: true } }) : Promise.resolve(null),
-      b.model_id ? db.crmModel.findUnique({ where: { id: parseInt(b.model_id, 10) }, select: { name: true } }) : Promise.resolve(null),
-    ]);
-    if (!enquiryType?.name?.trim().toLowerCase().startsWith('complain')) return;
-    const loginUserEmail = String(user.email || '').trim().toLowerCase();
-    const recipientEmails = [...new Set([
-      ...recipients.map((recipient) => String(recipient.email || '').trim().toLowerCase()),
-      loginUserEmail,
-    ].filter(Boolean))];
-    await sendLeadAssignmentEmail({
-      recipients: recipientEmails,
-      leadCode: outcome.leadCode!,
-      dealerName: dealer?.name,
-      department,
-      assignedBy: user.name,
-      enquiryType: enquiryType?.name,
-      fields: {
-        'Customer name': b.customer_name,
-        'Mobile': b.mobile,
-        'Secondary number': b.secondary_number,
-        'Customer email': b.email,
-        'Location': b.location,
-        'Source': b.source,
-        'Reference customer': b.referral_customer_name,
-        'Brand': brand?.name || b.brand_id,
-        'Model': model?.name || b.model_id,
-        'Variant': b.variant,
-        'Registration number': b.registration_number,
-        'Enquiry category': category?.name,
-        'Enquiry type': enquiryType?.name,
-        'Priority': b.priority,
-        'Assigned users': recipients.map((recipient) => recipient.name).join(', '),
-        'Initial remarks': b.initial_remarks,
-        'Next follow-up date': b.next_followup_date,
-      },
-    });
-  })().catch((error) => console.error('Lead email delivery failed:', error));
 
   return NextResponse.json({ lead: { id: outcome.leadId, lead_code: outcome.leadCode }, message: 'Lead created and assigned' }, { status: 201 });
 }

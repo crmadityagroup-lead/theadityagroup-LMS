@@ -2,7 +2,6 @@ import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentUser, isSuperAdmin, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartment } from '@/lib/auth';
-import { escalateOpenComplaints } from '@/lib/complaint-escalation';
 
 let supportTableReady: Promise<void> | null = null;
 function ensureSupportTable() {
@@ -38,9 +37,6 @@ export async function GET(req: Request) {
   const sinceParam = url.searchParams.get('since');
   const parsedSince = sinceParam ? new Date(sinceParam) : null;
   const since = parsedSince && !Number.isNaN(parsedSince.getTime()) ? parsedSince : new Date(Date.now() - 24 * 60 * 60 * 1000);
-  // Escalation runs in the background so notification polling is not delayed.
-  void escalateOpenComplaints().catch((error) => console.error('Background complaint escalation failed:', error));
-
   const where: any = { AND: [{ createdAt: { gt: since } }] };
   const dealerIds = visibleDealerIds(user);
   if (dealerIds !== null) {

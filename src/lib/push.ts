@@ -45,6 +45,7 @@ export async function sendPushToLeadUsers(leadId: number, actorId: number, paylo
   ]);
   if (!lead) return;
   const admins = await db.crmUser.findMany({ where: { role: { in: ['admin', 'super_admin'] }, active: true }, select: { id: true } });
+  const adminIds = new Set(admins.map((admin) => admin.id));
   const userIds = [...new Set([
     lead.assignedUserId,
     ...assignedUsers.map((assigned) => assigned.id),
@@ -60,8 +61,10 @@ export async function sendPushToLeadUsers(leadId: number, actorId: number, paylo
   const leadLabel = `${lead.leadCode} (${lead.customerName})`;
   await Promise.all(subscriptions.map(async (subscription) => {
     try {
-      const body = payload.assignment
+      const body = payload.assignment && adminIds.has(subscription.user_id)
         ? `${actorName} assigned ${leadLabel} to ${assigneeNames}. Enquiry: ${enquiryType}. Department: ${department}.`
+        : payload.assignment
+          ? `New lead: ${leadLabel}. Enquiry: ${enquiryType}. Department: ${department}.`
         : `${payload.body} Lead: ${leadLabel}. Enquiry: ${enquiryType}. Department: ${department}.`;
       await webpush.sendNotification({ endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } }, JSON.stringify({ title: payload.title, body, url: '/' }));
     } catch (error: any) {
