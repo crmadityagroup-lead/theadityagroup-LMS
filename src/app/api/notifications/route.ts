@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { getCurrentUser, isSuperAdmin, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartment } from '@/lib/auth';
 
 let supportTableReady: Promise<void> | null = null;
+let notificationDismissalTableReady: Promise<void> | null = null;
 function ensureSupportTable() {
   if (!supportTableReady) {
     supportTableReady = (async () => {
@@ -14,6 +15,13 @@ function ensureSupportTable() {
     })().catch((error) => { supportTableReady = null; throw error; });
   }
   return supportTableReady;
+}
+
+function ensureNotificationDismissalTable() {
+  if (!notificationDismissalTableReady) {
+    notificationDismissalTableReady = db.$executeRawUnsafe('CREATE TABLE IF NOT EXISTS crm_notification_dismissals (user_id INTEGER NOT NULL REFERENCES crm_users(id) ON DELETE CASCADE, notification_id TEXT NOT NULL, dismissed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (user_id, notification_id))').then(() => undefined).catch((error) => { notificationDismissalTableReady = null; throw error; });
+  }
+  return notificationDismissalTableReady;
 }
 
 // GET /api/notifications?since=<ISO> — notification-worthy events for the current user
@@ -209,8 +217,10 @@ export async function GET(req: Request) {
   const notifications = [...newLeadNotifications, ...assignmentNotifications, ...statusNotifications, ...unassignedNotifications, ...supportNotifications]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 50);
-
-  return NextResponse.json({ notifications, server_time: pollStartedAt.toISOString() });
+  await ensureNotificationDismissalTable();
+  const dismissedRows = await db.$queryRawUnsafe<Array<{ notification_id: string }>>('SELECT notification_id FROM crm_notification_dismissals WHERE user_id = $1', user.id);
+  const dismissedIds = new Set(dismissedRows.map((row) => row.notification_id));
+  return NextResponse.json({ notifications: notifications.filter((notification) => !dismissedIds.has(notification.id)), server_time: pollStartedAt.toISOString() });
 }
 
 export async function PATCH(req: Request) {
@@ -218,6 +228,13 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   if (!isSuperAdmin(user)) return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
   const body = await req.json().catch(() => ({}));
+  if (body.kind === 'notification_dismiss') {
+    const ids = Array.isArray(body.ids) ? [...new Set(body.ids.map((id: unknown) => String(id).trim()).filter((id: string) => id && id.length <= 200))].slice(0, 100) : [];
+    if (!ids.length) return NextResponse.json({ error: 'At least one notification is required' }, { status: 400 });
+    await ensureNotificationDismissalTable();
+    await db.$executeRawUnsafe('INSERT INTO crm_notification_dismissals (user_id, notification_id) SELECT $1, UNNEST($2::text[]) ON CONFLICT (user_id, notification_id) DO NOTHING', user.id, ids);
+    return NextResponse.json({ dismissed: ids.length });
+  }
   if (body.kind === 'support_restore') {
     const id = Number(body.id);
     if (!Number.isInteger(id) || id <= 0) return NextResponse.json({ error: 'Valid ticket id is required' }, { status: 400 });

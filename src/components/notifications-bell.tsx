@@ -278,12 +278,15 @@ export function NotificationsBell() {
     dismissedIds.current.add(String(id));
     persistDismissed();
     setItems(prev => prev.filter(item => item.id !== id));
+    void api.patch('/notifications', { kind: 'notification_dismiss', ids: [id] }).catch(() => {});
   }
 
   function clearNotifications() {
-    items.forEach(item => dismissedIds.current.add(String(item.id)));
+    const ids = items.map((item) => String(item.id));
+    ids.forEach((id) => dismissedIds.current.add(id));
     persistDismissed();
     setItems([]);
+    if (ids.length) void api.patch('/notifications', { kind: 'notification_dismiss', ids }).catch(() => {});
   }
 
   function handleClick(n: Notification) {
@@ -293,6 +296,7 @@ export function NotificationsBell() {
     dismissedIds.current.add(String(n.id));
     persistDismissed();
     setItems(prev => prev.filter(item => item.id !== n.id));
+    void api.patch('/notifications', { kind: 'notification_dismiss', ids: [n.id] }).catch(() => {});
     if (n.lead_id && (window as any).App) {
       (window as any).App.navigate('lead-detail', n.lead_id);
     }
