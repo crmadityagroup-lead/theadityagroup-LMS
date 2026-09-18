@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS crm_cache_refresh (
+  id INTEGER PRIMARY KEY,
+  version INTEGER NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_by INTEGER
+);

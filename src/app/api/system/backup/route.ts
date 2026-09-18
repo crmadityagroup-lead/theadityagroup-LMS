@@ -11,6 +11,8 @@ const backupModels = {
   enquiry_categories: 'crmEnquiryCategory',
   enquiry_types: 'crmEnquiryType',
   users: 'crmUser',
+  support_tickets: 'crmSupportTicket',
+  otp_codes: 'crmOtpCode',
   user_enquiry_types: 'crmUserEnquiryType',
   leads: 'crmLead',
   lead_activities: 'crmLeadActivity',
@@ -35,6 +37,7 @@ function normalizeRows(key: string, rows: any[]) {
     dealers: ['createdAt'], brands: ['createdAt'], models: ['createdAt', 'recycledAt'],
     enquiry_categories: ['createdAt'], enquiry_types: ['createdAt'],
     users: ['recycledAt', 'lastLoginAt', 'lastActiveAt', 'createdAt', 'updatedAt'],
+    support_tickets: ['createdAt', 'updatedAt'], otp_codes: ['expiresAt', 'createdAt'],
     leads: ['nextFollowupDate', 'createdAt', 'updatedAt', 'closedAt'],
     lead_activities: ['createdAt'], lead_followups: ['followupDate', 'nextFollowupDate', 'createdAt'],
     department_updates: ['createdAt'], login_history: ['createdAt'],
@@ -97,6 +100,8 @@ export async function POST(request: NextRequest) {
       await insert('enquiry_categories', 'crmEnquiryCategory');
       await insert('enquiry_types', 'crmEnquiryType');
       await insert('users', 'crmUser');
+      await insert('support_tickets', 'crmSupportTicket');
+      await insert('otp_codes', 'crmOtpCode');
       await insert('user_enquiry_types', 'crmUserEnquiryType');
       await insert('leads', 'crmLead');
       await insert('lead_activities', 'crmLeadActivity');
@@ -109,5 +114,4 @@ export async function POST(request: NextRequest) {
   }
   return NextResponse.json({ restored: true, message: 'Backup data restored. Existing records were preserved.' });
 }
-
 

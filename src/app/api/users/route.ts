@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentUser, isSuperAdmin, visibleDealerIds } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
@@ -33,7 +34,11 @@ export async function GET() {
     select: { id: true, name: true, email: true, phone: true, role: true, dealerId: true, department: true, active: true, emailVerified: true, lastLoginAt: true, createdAt: true, dealer: { select: { name: true, code: true } } },
     orderBy: { createdAt: 'desc' },
   });
-  const out = users.map((u: any) => ({ ...u, dealer_id: u.dealerId, dealer_name: u.dealer?.name || null, dealer_code: u.dealer?.code || null, dealer: undefined }));
+  const avatarRows = users.length
+    ? await db.$queryRaw<Array<{ id: number; avatar_data: string | null }>>(Prisma.sql`SELECT id, avatar_data FROM crm_users WHERE id IN (${Prisma.join(users.map((item) => item.id))})`)
+    : [];
+  const avatarsByUserId = new Map(avatarRows.map((avatar) => [avatar.id, avatar.avatar_data]));
+  const out = users.map((u: any) => ({ ...u, avatar_data: avatarsByUserId.get(u.id) || null, dealer_id: u.dealerId, dealer_name: u.dealer?.name || null, dealer_code: u.dealer?.code || null, dealer: undefined }));
   return NextResponse.json({ users: out });
 }
 

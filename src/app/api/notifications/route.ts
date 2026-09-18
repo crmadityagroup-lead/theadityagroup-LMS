@@ -8,6 +8,7 @@ function ensureSupportTable() {
   if (!supportTableReady) {
     supportTableReady = (async () => {
       await db.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS crm_support_tickets (id SERIAL PRIMARY KEY, token TEXT NOT NULL UNIQUE, user_id INTEGER NOT NULL REFERENCES crm_users(id) ON DELETE CASCADE, subject TEXT NOT NULL, description TEXT NOT NULL, route TEXT, user_agent TEXT, status TEXT NOT NULL DEFAULT 'open', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`);
+      await db.$executeRawUnsafe(`ALTER TABLE crm_support_tickets ADD COLUMN IF NOT EXISTS recycled_at TIMESTAMPTZ`);
       await db.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS crm_support_tickets_status_idx ON crm_support_tickets(status)`);
       await db.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS crm_support_tickets_created_at_idx ON crm_support_tickets(created_at)`);
     })().catch((error) => { supportTableReady = null; throw error; });
@@ -22,11 +23,12 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const requestUrl = new URL(req.url);
-  if (requestUrl.searchParams.get('support') === '1') {
+  if (requestUrl.searchParams.get('support') === '1' || requestUrl.searchParams.get('support') === 'recycled') {
     if (!isSuperAdmin(user)) return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     await ensureSupportTable();
-    const tickets = await db.$queryRaw<Array<any>>`SELECT t.id, t.token, t.subject, t.description, t.route, t.status, t.created_at, t.updated_at, u.name AS user_name, u.email AS user_email, u.role AS user_role, d.name AS dealer_name FROM crm_support_tickets t JOIN crm_users u ON u.id = t.user_id LEFT JOIN crm_dealers d ON d.id = u.dealer_id ORDER BY t.created_at DESC LIMIT 200`;
-    return NextResponse.json({ tickets: tickets.map((ticket) => ({ id: ticket.id, token: ticket.token, subject: ticket.subject, description: ticket.description, route: ticket.route, status: ticket.status, created_at: ticket.created_at, updated_at: ticket.updated_at, user: { name: ticket.user_name, email: ticket.user_email, role: ticket.user_role, dealer: ticket.dealer_name ? { name: ticket.dealer_name } : null } })) });
+    const recycled = requestUrl.searchParams.get('support') === 'recycled';
+    const tickets = await db.$queryRawUnsafe<Array<any>>(`SELECT t.id, t.token, t.subject, t.description, t.route, t.status, t.created_at, t.updated_at, t.recycled_at, u.id AS user_id, u.name AS user_name, u.email AS user_email, u.role AS user_role, u.avatar_data AS user_avatar_data, d.name AS dealer_name FROM crm_support_tickets t JOIN crm_users u ON u.id = t.user_id LEFT JOIN crm_dealers d ON d.id = u.dealer_id WHERE t.recycled_at IS ${recycled ? 'NOT ' : ''}NULL ORDER BY t.created_at DESC LIMIT 200`);
+    return NextResponse.json({ tickets: tickets.map((ticket) => ({ id: ticket.id, token: ticket.token, subject: ticket.subject, description: ticket.description, route: ticket.route, status: ticket.status, created_at: ticket.created_at, updated_at: ticket.updated_at, recycled_at: ticket.recycled_at, user: { id: ticket.user_id, name: ticket.user_name, email: ticket.user_email, avatar_data: ticket.user_avatar_data || null, role: ticket.user_role, dealer: ticket.dealer_name ? { name: ticket.dealer_name } : null } })) });
   }
 
   // Use the start of the read window as the next cursor. Events committed while
@@ -216,6 +218,14 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   if (!isSuperAdmin(user)) return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
   const body = await req.json().catch(() => ({}));
+  if (body.kind === 'support_restore') {
+    const id = Number(body.id);
+    if (!Number.isInteger(id) || id <= 0) return NextResponse.json({ error: 'Valid ticket id is required' }, { status: 400 });
+    await ensureSupportTable();
+    const result = await db.$executeRawUnsafe('UPDATE crm_support_tickets SET recycled_at = NULL, updated_at = NOW() WHERE id = $1 AND recycled_at IS NOT NULL', id);
+    if (!result) return NextResponse.json({ error: 'Help request is not in the recycle bin' }, { status: 404 });
+    return NextResponse.json({ restored: true });
+  }
   if (body.kind !== 'support_close') return NextResponse.json({ error: 'Unsupported notification request' }, { status: 400 });
   const id = Number(body.id);
   if (!Number.isInteger(id) || id <= 0) return NextResponse.json({ error: 'Valid ticket id is required' }, { status: 400 });
@@ -223,6 +233,23 @@ export async function PATCH(req: Request) {
   const [ticket] = await db.$queryRaw<Array<{ id: number; status: string }>>`UPDATE crm_support_tickets SET status = 'closed', updated_at = NOW() WHERE id = ${id} AND status <> 'closed' RETURNING id, status`;
   if (!ticket) return NextResponse.json({ error: 'Ticket not found or already closed' }, { status: 404 });
   return NextResponse.json({ ticket });
+}
+
+export async function DELETE(req: Request) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  if (!isSuperAdmin(user)) return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+  const body = await req.json().catch(() => ({}));
+  if (!['support', 'support_permanent'].includes(body.kind)) return NextResponse.json({ error: 'Unsupported delete request' }, { status: 400 });
+  const ids = Array.isArray(body.ids) ? [...new Set(body.ids.map(Number).filter((id: number) => Number.isInteger(id) && id > 0))] : [];
+  if (!ids.length) return NextResponse.json({ error: 'Select at least one help request' }, { status: 400 });
+  await ensureSupportTable();
+  if (body.kind === 'support_permanent') {
+    const result = await db.$executeRawUnsafe(`DELETE FROM crm_support_tickets WHERE id = ANY($1::int[]) AND recycled_at IS NOT NULL`, ids);
+    return NextResponse.json({ deleted: Number(result) || 0 });
+  }
+  const result = await db.$executeRawUnsafe(`UPDATE crm_support_tickets SET recycled_at = NOW(), updated_at = NOW() WHERE id = ANY($1::int[]) AND recycled_at IS NULL`, ids);
+  return NextResponse.json({ recycled: Number(result) || 0 });
 }
 
 export async function POST(req: Request) {

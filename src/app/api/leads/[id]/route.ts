@@ -29,10 +29,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     db.crmLeadFollowup.findMany({ where: { leadId }, orderBy: { followupDate: 'desc' }, select: { id: true, remarks: true, nextFollowupDate: true, outcome: true, followupDate: true, createdAt: true, user: { select: { name: true } } } }),
     db.crmDepartmentUpdate.findMany({ where: { leadId }, orderBy: { createdAt: 'desc' }, select: { id: true, department: true, data: true, createdAt: true, user: { select: { name: true } } } }),
   ]);
+  const assignedUserIds = [...new Set(activities.flatMap((activity: any) => Array.isArray(activity.details?.assigned_to) ? activity.details.assigned_to.map(Number).filter(Number.isInteger) : []))];
+  const assignedUsers = assignedUserIds.length
+    ? await db.crmUser.findMany({ where: { id: { in: assignedUserIds } }, select: { id: true, name: true } })
+    : [];
+  const assignedUserNames = new Map(assignedUsers.map((assignedUser) => [assignedUser.id, assignedUser.name]));
 
   return NextResponse.json({
     lead,
-    activities: activities.map((a: any) => ({ id: a.id, action: a.action, details: a.details, created_at: a.createdAt, user_name: a.user?.name || null })),
+    activities: activities.map((a: any) => {
+      const details = a.details && typeof a.details === 'object' ? { ...a.details } : a.details;
+      if (details && Array.isArray(details.assigned_to)) details.assigned_to_names = details.assigned_to.map((id: unknown) => assignedUserNames.get(Number(id))).filter(Boolean);
+      return { id: a.id, action: a.action, details, created_at: a.createdAt, user_name: a.user?.name || null };
+    }),
     followups: followups.map((f: any) => ({ id: f.id, remarks: f.remarks, next_followup_date: f.nextFollowupDate, outcome: f.outcome, followup_date: f.followupDate, created_at: f.createdAt, user_name: f.user?.name || null })),
     department_updates: deptUpdates.map((d: any) => ({ id: d.id, department: d.department, data: d.data, created_at: d.createdAt, user_name: d.user?.name || null })),
   });

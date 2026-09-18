@@ -109,6 +109,27 @@ const DEPT_FIELD_OPTIONS: Record<string, string[]> = {
   'Customer Decision': ['Interested', 'Negotiating', 'Accepted', 'Declined'],
 };
 
+function formatActivityDetails(action: string, details: any) {
+  if (!details || typeof details !== 'object') return '';
+  const assignedNames = Array.isArray(details.assigned_to_names) ? details.assigned_to_names : [];
+  if (action === 'assigned') {
+    const parts = [assignedNames.length ? `Assigned to ${assignedNames.join(', ')}` : 'Lead assignment updated'];
+    if (details.department) parts.push(`Department: ${details.department}`);
+    if (details.reassigned) parts.push('Reassigned');
+    return parts.join(' · ');
+  }
+  if (action === 'created') {
+    const parts = ['Lead created'];
+    if (assignedNames.length) parts.push(`Assigned to ${assignedNames.join(', ')}`);
+    if (details.priority) parts.push(`Priority: ${details.priority}`);
+    return parts.join(' · ');
+  }
+  if (action === 'status_changed') return `Status changed from ${String(details.from || 'new').replaceAll('_', ' ')} to ${String(details.to || '-').replaceAll('_', ' ')}`;
+  if (action === 'remark_added') return details.remark ? `Remark: ${details.remark}` : 'Remark updated';
+  const entries = Object.entries(details).filter(([key]) => !['assigned_to', 'assigned_to_names', 'message'].includes(key));
+  return entries.map(([key, value]) => `${key.replaceAll('_', ' ')}: ${Array.isArray(value) ? value.join(', ') : String(value)}`).join(' · ') || details.message || '';
+}
+
 export function LeadDetailPage({ leadId, navigate }: { leadId: number; navigate: NavigateFn }) {
   const { user } = useAuth();
   const [data, setData] = useState<any>(null);
@@ -455,7 +476,7 @@ export function LeadDetailPage({ leadId, navigate }: { leadId: number; navigate:
                   <div key={a.id} className="border-l-2 border-[var(--gold)] pl-3 py-1">
                     <div className="font-medium capitalize">{a.action.replace('_',' ')}</div>
                     <div className="text-xs text-muted-foreground">{a.user_name || 'System'} · {timeAgo(a.created_at)}</div>
-                    {a.details && <div className="text-xs text-muted-foreground">{JSON.stringify(a.details)}</div>}
+                    {a.details && <div className="text-xs text-muted-foreground">{formatActivityDetails(a.action, a.details)}</div>}
                   </div>
                 ))}
               </div>}

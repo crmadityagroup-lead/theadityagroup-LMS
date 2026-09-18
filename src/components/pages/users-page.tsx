@@ -10,11 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { RoleBadge, timeAgo, EmptyState } from '@/components/ui-shared';
+import { RoleBadge, EmptyState } from '@/components/ui-shared';
 import { toast } from 'sonner';
 import { DEPARTMENTS } from '@/lib/department-constants';
 import { normalizeEnquiryCategories, normalizeEnquiryTypes } from '@/lib/enquiry-vocabulary';
 import { getCachedMaster } from '@/lib/master-options-cache';
+import { GeneratedAvatar } from '@/components/generated-avatar';
 import { UserPlus, Users as UsersIcon, Trash2, PenSquare, AlertTriangle, Loader2 } from 'lucide-react';
 
 export function UsersPage() {
@@ -196,18 +197,19 @@ export function UsersPage() {
           {loading ? <div className="p-8 text-center text-muted-foreground animate-pulse">Loading…</div> :
            users.length === 0 ? <EmptyState icon={UsersIcon} title="No users found" /> :
            <div className="overflow-x-auto">
-           <table className="mx-auto min-w-[980px] w-full text-sm">
-               <thead className="border-b text-muted-foreground"><tr><th className="w-10 py-2 px-3"><Checkbox checked={users.length > 0 && selectedIds.length === users.length} onCheckedChange={toggleAllUsers} aria-label="Select all users" /></th><th className="text-left py-2 px-3">Name</th><th className="text-left py-2 px-3">Email</th><th className="text-left py-2 px-3">Role</th><th className="text-left py-2 px-3">Dealer</th><th className="text-left py-2 px-3">Department</th><th className="text-left py-2 px-3">Last Login</th><th className="text-left py-2 px-3">Actions</th></tr></thead>
+           <table className="mx-auto min-w-[1040px] w-full text-sm">
+               <thead className="border-b text-muted-foreground"><tr><th className="w-10 py-2 px-3"><Checkbox checked={users.length > 0 && selectedIds.length === users.length} onCheckedChange={toggleAllUsers} aria-label="Select all users" /></th><th className="w-14 py-2 px-3">Photo</th><th className="text-left py-2 px-3">Name</th><th className="text-left py-2 px-3">Email</th><th className="text-left py-2 px-3">Role</th><th className="text-left py-2 px-3">Dealer</th><th className="text-left py-2 px-3">Department</th><th className="text-left py-2 px-3">Phone Number</th><th className="text-left py-2 px-3">Actions</th></tr></thead>
                <tbody>
                  {users.map(u => (
                    <tr key={u.id} className="border-b last:border-b-0 hover:bg-muted/50">
                      <td className="py-2 px-3"><Checkbox checked={selectedIds.includes(u.id)} onCheckedChange={() => toggleUser(u.id)} aria-label={`Select ${u.name}`} /></td>
+                     <td className="py-2 px-3"><div className="h-9 w-9 overflow-hidden rounded-full border border-border bg-muted">{u.avatar_data ? <img src={u.avatar_data} alt={`${u.name} profile`} className="block h-full w-full rounded-full object-cover object-center" /> : <GeneratedAvatar seed={`${u.id}:${u.email}`} name={u.name} size={36} />}</div></td>
                      <td className="py-2 px-3 font-medium">{u.name}</td>
                      <td className="py-2 px-3 text-muted-foreground">{u.email}</td>
                      <td className="py-2 px-3"><RoleBadge role={u.role} /></td>
                      <td className="py-2 px-3">{u.dealer_name || '— (Group)'}</td>
                      <td className="py-2 px-3">{u.department || '—'}</td>
-                     <td className="py-2 px-3 text-xs text-muted-foreground">{u.last_login_at ? timeAgo(u.last_login_at) : 'never'}</td>
+                     <td className="py-2 px-3 text-muted-foreground">{u.phone || '—'}</td>
                      <td className="py-2 px-3">
                        <div className="flex items-center gap-2">
                          <Button variant="ghost" size="sm" disabled={editLoading} onClick={() => void openEdit(u)}><PenSquare className="h-3 w-3" /></Button>

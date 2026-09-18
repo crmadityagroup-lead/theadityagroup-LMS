@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth';
 
@@ -10,10 +11,15 @@ export async function GET() {
   const history = await db.crmLoginHistory.findMany({
     take: 200,
     orderBy: { createdAt: 'desc' },
-    select: { id: true, userId: true, email: true, action: true, userAgent: true, createdAt: true, user: { select: { name: true, email: true } } },
+    select: { id: true, userId: true, email: true, action: true, ip: true, userAgent: true, createdAt: true, user: { select: { name: true, email: true } } },
   });
+  const userIds = [...new Set(history.map((item) => item.userId).filter((id): id is number => Number.isInteger(id)))];
+  const avatarRows = userIds.length
+    ? await db.$queryRaw<Array<{ id: number; avatar_data: string | null }>>(Prisma.sql`SELECT id, avatar_data FROM crm_users WHERE id IN (${Prisma.join(userIds)})`)
+    : [];
+  const avatarsByUserId = new Map(avatarRows.map((avatar) => [avatar.id, avatar.avatar_data]));
   const out = history.map((h: any) => ({
-    id: h.id, user_id: h.userId, email: h.email, action: h.action, user_agent: h.userAgent, created_at: h.createdAt,
+    id: h.id, user_id: h.userId, email: h.email, action: h.action, ip: h.ip, user_agent: h.userAgent, created_at: h.createdAt, avatar_data: h.userId ? avatarsByUserId.get(h.userId) || null : null,
     user_name: h.user?.name || null, user_email: h.user?.email || null,
   }));
   return NextResponse.json({ history: out });

@@ -23,6 +23,7 @@ import { SupportTicketsPage } from '@/components/pages/support-tickets-page';
 import { ProfilePage } from '@/components/pages/profile-page';
 import { HelpCenter } from '@/components/help-center';
 import { ProfileAvatar } from '@/components/profile-avatar';
+import { ClearAppCacheButton } from '@/components/clear-app-cache-button';
 import {
   LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
@@ -161,7 +162,9 @@ export function AppShell() {
         </nav>
 
         <div className="shrink-0 flex items-end justify-center p-5">
-          {!sidebarCollapsed && (
+          {sidebarCollapsed ? (
+            <Logo variant="icon" size={42} className="transition-transform duration-300" />
+          ) : (
             <div className="neo-sidebar-brand-mark text-center">
               <Logo variant="full" size={64} className="origin-center max-lg:scale-125" />
               {user.dealer_id && DEALER_LABELS[user.dealer_id] && <div className="mt-2 text-xs font-black uppercase tracking-wide text-sidebar-foreground">{DEALER_LABELS[user.dealer_id]}</div>}
@@ -192,7 +195,7 @@ export function AppShell() {
           </div>
           <div className="flex items-center gap-2 pl-3 border-l border-border">
             <ProfileAvatar onClick={() => navigate('profile')} />
-            <div className="text-right hidden sm:block">
+            <div className="hidden text-left sm:block">
               <div className="text-sm font-medium leading-tight">{user.name}</div>
               <div className="text-xs text-muted-foreground leading-tight">{user.email}</div>
             </div>
@@ -207,6 +210,8 @@ export function AppShell() {
           &copy; 2026 Aditya Group. All Rights Reserved.
         </footer>
       </div>
+
+      <ClearAppCacheButton canClear={['super_admin', 'admin'].includes(normalizeRole(user.role))} />
 
       <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <AlertDialogContent>

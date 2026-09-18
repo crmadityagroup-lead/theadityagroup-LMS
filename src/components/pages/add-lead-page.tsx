@@ -19,6 +19,8 @@ import { getCachedEligibleUsers, getCachedEnquiryTypes, getCachedMaster } from '
 
 interface NavigateFn { (route: string, arg?: any): void; }
 
+const EMPTY_LEAD_FORM = { customer_name: '', mobile: '', secondary_number: '', email: '', location: '', variant: '', registration_number: '', source: '', referral_customer_name: '', priority: 'Medium', initial_remarks: '', assigned_user_id: '', next_followup_date: '' };
+
 export function AddLeadPage({ navigate }: { navigate: NavigateFn }) {
   const { user } = useAuth();
   const [dealers, setDealers] = useState<any[]>([]);
@@ -37,7 +39,7 @@ export function AddLeadPage({ navigate }: { navigate: NavigateFn }) {
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const [masterError, setMasterError] = useState<string | null>(null);
-  const [form, setForm] = useState({ customer_name: '', mobile: '', secondary_number: '', email: '', location: '', variant: '', registration_number: '', source: '', referral_customer_name: '', priority: 'Medium', initial_remarks: '', assigned_user_id: '', next_followup_date: '' });
+  const [form, setForm] = useState(EMPTY_LEAD_FORM);
 
   useEffect(() => {
     setMasterError(null);
@@ -109,6 +111,23 @@ export function AddLeadPage({ navigate }: { navigate: NavigateFn }) {
   }
 
   const fixedDealer = user?.role === 'data_operator_2' && user?.dealer_id && dealers.length === 1;
+
+  function resetForm() {
+    if (submitting) return;
+    const fixedDealerBrand = fixedDealer && dealers[0]?.brand
+      ? brands.find((brand) => brand.name.trim().toLowerCase() === dealers[0].brand.trim().toLowerCase())
+      : null;
+    setForm(EMPTY_LEAD_FORM);
+    setBrandId(fixedDealerBrand ? String(fixedDealerBrand.id) : '');
+    setModelId('');
+    setCategoryId('');
+    setTypeId('');
+    setDerivedDept('');
+    setAssignedUserIds([]);
+    setEligibleUsers([]);
+    if (!fixedDealer) setDealerId('');
+    toast.success('Form reset');
+  }
 
   return (
     <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto w-full space-y-4">
@@ -200,7 +219,7 @@ export function AddLeadPage({ navigate }: { navigate: NavigateFn }) {
         </Card>
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => navigate('leads')}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={resetForm}>Reset form</Button>
           <Button type="submit" className="btn-gold" disabled={submitting}>{submitting ? 'Creating…' : 'Create & Assign Lead'}</Button>
         </div>
       </form>

@@ -118,11 +118,11 @@ export function PerformancePage() {
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">From date</label>
-              <input type="date" className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring" value={from} onChange={(e) => setFrom(e.target.value)} />
+              <input type="date" className="h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring" value={from} onChange={(e) => setFrom(e.target.value)} onClick={(event) => { try { event.currentTarget.showPicker?.(); } catch {} }} />
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">To date</label>
-              <input type="date" className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring" value={to} onChange={(e) => setTo(e.target.value)} />
+              <input type="date" className="h-9 w-full cursor-pointer rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring" value={to} onChange={(e) => setTo(e.target.value)} onClick={(event) => { try { event.currentTarget.showPicker?.(); } catch {} }} />
             </div>
           </div>
           <div className="mt-3 flex flex-wrap justify-end gap-2">

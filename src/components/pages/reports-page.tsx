@@ -84,9 +84,9 @@ export function ReportsPage() {
       </div> : null}
 
       <Card>
-        <CardContent className="p-3 grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div><Label className="text-xs">From Date</Label><Input type="date" value={filters.from_date} onChange={(e) => setFilters({ ...filters, from_date: e.target.value })} /></div>
-          <div><Label className="text-xs">To Date</Label><Input type="date" value={filters.to_date} onChange={(e) => setFilters({ ...filters, to_date: e.target.value })} /></div>
+        <CardContent className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 md:grid-cols-5">
+          <div className="min-w-0"><Label className="text-xs">From Date</Label><Input className="cursor-pointer" type="date" value={filters.from_date} onChange={(e) => setFilters({ ...filters, from_date: e.target.value })} /></div>
+          <div className="min-w-0"><Label className="text-xs">To Date</Label><Input className="cursor-pointer" type="date" value={filters.to_date} onChange={(e) => setFilters({ ...filters, to_date: e.target.value })} /></div>
           {isOperator() && <div><Label className="text-xs">Dealer</Label><Select value={filters.dealer_id} onValueChange={(v) => setFilters({ ...filters, dealer_id: v })}><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent>{dealers.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}</SelectContent></Select></div>}
           <div><Label className="text-xs">Department</Label><Select value={filters.department} onValueChange={(v) => setFilters({ ...filters, department: v })}><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select></div>
           <div><Label className="text-xs">Status</Label><Select value={filters.status} onValueChange={(v) => setFilters({ ...filters, status: v })}><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent>{['new','in_progress','follow_up','converted','closed','lost','recycled'].map(s => <SelectItem key={s} value={s}>{s.replace('_',' ')}</SelectItem>)}</SelectContent></Select></div>
