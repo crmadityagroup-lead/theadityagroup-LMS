@@ -20,12 +20,13 @@ import { RecycleBinPage } from '@/components/pages/recycle-bin-page';
 import { ThemePage } from '@/components/pages/theme-page';
 import { BackupPage } from '@/components/pages/backup-page';
 import { SupportTicketsPage } from '@/components/pages/support-tickets-page';
+import { DatabaseHealthPage } from '@/components/pages/database-health-page';
 import { ProfilePage } from '@/components/pages/profile-page';
 import { HelpCenter } from '@/components/help-center';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { ClearAppCacheButton } from '@/components/clear-app-cache-button';
 import {
-  LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen,
+  LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen, Server,
 } from 'lucide-react';
 
 interface NavItem {
@@ -48,11 +49,12 @@ const PAGES: NavItem[] = [
   { key: 'theme', label: 'Theme', icon: Palette, roles: ['super_admin'] },
   { key: 'backup', label: 'Backup & Restore', icon: DatabaseBackup, roles: ['super_admin'] },
   { key: 'support-tickets', label: 'Help Requests', icon: HelpCircle, roles: ['super_admin'] },
+  { key: 'database-health', label: 'Database Health', icon: Server, roles: ['super_admin', 'admin'] },
 ];
 
 const ROLE_TABS: Record<string, string[]> = {
-  super_admin: ['dashboard', 'leads', 'models', 'users', 'reports', 'performance', 'login-history', 'recycle-bin', 'theme', 'backup', 'support-tickets'],
-  admin: ['dashboard', 'leads', 'reports', 'performance', 'recycle-bin'],
+  super_admin: ['dashboard', 'leads', 'models', 'users', 'reports', 'performance', 'login-history', 'recycle-bin', 'theme', 'backup', 'support-tickets', 'database-health'],
+  admin: ['dashboard', 'leads', 'reports', 'performance', 'recycle-bin', 'database-health'],
   data_operator_1: ['dashboard', 'leads', 'leads-new', 'reports'],
   data_operator_2: ['dashboard', 'leads', 'leads-new', 'reports'],
   department_user: ['dashboard', 'leads'],
@@ -103,6 +105,7 @@ export function AppShell() {
       case 'theme': return normalizeRole(user?.role || '') === 'super_admin' ? <ThemePage /> : <DashboardPage navigate={navigate} />;
       case 'backup': return normalizeRole(user?.role || '') === 'super_admin' ? <BackupPage /> : <DashboardPage navigate={navigate} />;
       case 'support-tickets': return normalizeRole(user?.role || '') === 'super_admin' ? <SupportTicketsPage /> : <DashboardPage navigate={navigate} />;
+      case 'database-health': return ['super_admin', 'admin'].includes(normalizeRole(user?.role || '')) ? <DatabaseHealthPage /> : <DashboardPage navigate={navigate} />;
       case 'profile': return <ProfilePage navigate={navigate} />;
       default: return <DashboardPage navigate={navigate} />;
     }

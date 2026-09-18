@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { getCurrentUser, canManageLeads, canCreateLead, authorizeLeadAction } from '@/lib/auth';
 import { LEAD_SOURCES, normalizeMobile } from '@/lib/lead-filters';
@@ -8,39 +9,40 @@ import { setLeadAssignees } from '@/lib/lead-assignees';
 import { sendPushToLeadUsers } from '@/lib/push';
 
 // Helper: visibility check
-async function canAccessLead(user: any, leadId: number) {
-  const lead = await db.crmLead.findUnique({ where: { id: leadId }, select: { id: true, dealerId: true, department: true, assignedUserId: true, createdBy: true } });
-  if (!lead) return false;
-  return authorizeLeadAction(user, lead, 'VIEW');
-}
-
 // GET /api/leads/[id] — lead detail + activities + followups + dept updates
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   const { id } = await params;
   const leadId = parseInt(id, 10);
-  const lead = await fetchLeadDetail(leadId);
-  if (!lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
-  if (!(await canAccessLead(user, leadId))) return NextResponse.json({ error: 'No access to this lead' }, { status: 403 });
-
-  const [activities, followups, deptUpdates] = await Promise.all([
-    db.crmLeadActivity.findMany({ where: { leadId }, orderBy: { createdAt: 'asc' }, select: { id: true, action: true, details: true, createdAt: true, user: { select: { name: true } } } }),
-    db.crmLeadFollowup.findMany({ where: { leadId }, orderBy: { followupDate: 'desc' }, select: { id: true, remarks: true, nextFollowupDate: true, outcome: true, followupDate: true, createdAt: true, user: { select: { name: true } } } }),
-    db.crmDepartmentUpdate.findMany({ where: { leadId }, orderBy: { createdAt: 'desc' }, select: { id: true, department: true, data: true, createdAt: true, user: { select: { name: true } } } }),
+  const [lead, accessLead, activityData] = await Promise.all([
+    fetchLeadDetail(leadId),
+    db.crmLead.findUnique({ where: { id: leadId }, select: { id: true, dealerId: true, department: true, assignedUserId: true, createdBy: true } }),
+    Promise.all([
+      db.crmLeadActivity.findMany({ where: { leadId }, orderBy: { createdAt: 'asc' }, select: { id: true, userId: true, action: true, details: true, createdAt: true, user: { select: { name: true } } } }),
+      db.crmLeadFollowup.findMany({ where: { leadId }, orderBy: { followupDate: 'desc' }, select: { id: true, remarks: true, nextFollowupDate: true, outcome: true, followupDate: true, createdAt: true, user: { select: { name: true } } } }),
+      db.crmDepartmentUpdate.findMany({ where: { leadId }, orderBy: { createdAt: 'desc' }, select: { id: true, department: true, data: true, createdAt: true, user: { select: { name: true } } } }),
+    ]),
   ]);
+  if (!lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+  if (!accessLead || !authorizeLeadAction(user, accessLead, 'VIEW')) return NextResponse.json({ error: 'No access to this lead' }, { status: 403 });
+
+  const [activities, followups, deptUpdates] = activityData;
   const assignedUserIds = [...new Set(activities.flatMap((activity: any) => Array.isArray(activity.details?.assigned_to) ? activity.details.assigned_to.map(Number).filter(Number.isInteger) : []))];
-  const assignedUsers = assignedUserIds.length
-    ? await db.crmUser.findMany({ where: { id: { in: assignedUserIds } }, select: { id: true, name: true } })
-    : [];
-  const assignedUserNames = new Map(assignedUsers.map((assignedUser) => [assignedUser.id, assignedUser.name]));
+  const activityUserIds = [...new Set(activities.map((activity: any) => activity.userId).filter((id): id is number => Number.isInteger(id)))];
+  const [assignedUsers, activityAvatarRows] = await Promise.all([
+    assignedUserIds.length ? db.crmUser.findMany({ where: { id: { in: assignedUserIds } }, select: { id: true, name: true } }) : [],
+    activityUserIds.length ? db.$queryRaw<Array<{ id: number; avatar_data: string | null }>>`SELECT id, avatar_data FROM crm_users WHERE id IN (${Prisma.join(activityUserIds)})` : [],
+  ]);
+  const assignedUserNames = new Map<number, string>(assignedUsers.map((assignedUser) => [assignedUser.id, assignedUser.name] as [number, string]));
+  const activityAvatars = new Map<number, string | null>(activityAvatarRows.map((avatar) => [avatar.id, avatar.avatar_data] as [number, string | null]));
 
   return NextResponse.json({
     lead,
     activities: activities.map((a: any) => {
       const details = a.details && typeof a.details === 'object' ? { ...a.details } : a.details;
       if (details && Array.isArray(details.assigned_to)) details.assigned_to_names = details.assigned_to.map((id: unknown) => assignedUserNames.get(Number(id))).filter(Boolean);
-      return { id: a.id, action: a.action, details, created_at: a.createdAt, user_name: a.user?.name || null };
+      return { id: a.id, action: a.action, details, created_at: a.createdAt, user_id: a.userId, user_name: a.user?.name || null, user_avatar_data: a.userId ? activityAvatars.get(a.userId) || null : null };
     }),
     followups: followups.map((f: any) => ({ id: f.id, remarks: f.remarks, next_followup_date: f.nextFollowupDate, outcome: f.outcome, followup_date: f.followupDate, created_at: f.createdAt, user_name: f.user?.name || null })),
     department_updates: deptUpdates.map((d: any) => ({ id: d.id, department: d.department, data: d.data, created_at: d.createdAt, user_name: d.user?.name || null })),

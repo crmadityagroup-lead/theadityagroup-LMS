@@ -83,7 +83,9 @@ export function ClearAppCacheButton({ canClear }: { canClear: boolean }) {
     void checkVersion();
     void updateCacheSize();
     const versionTimer = window.setInterval(() => void checkVersion(), 30000);
-    const sizeTimer = window.setInterval(() => void updateCacheSize(), 5000);
+    // Measuring cache entries can be expensive on a large installed app; refresh
+    // the badge at a calmer interval and always refresh it immediately after clear.
+    const sizeTimer = window.setInterval(() => void updateCacheSize(), 30000);
     const onVisible = () => { if (document.visibilityState === 'visible') void updateCacheSize(); };
     document.addEventListener('visibilitychange', onVisible);
     return () => { active = false; window.clearInterval(versionTimer); window.clearInterval(sizeTimer); document.removeEventListener('visibilitychange', onVisible); };

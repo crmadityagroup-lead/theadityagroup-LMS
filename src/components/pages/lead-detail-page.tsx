@@ -19,6 +19,7 @@ import { WhatsAppIcon } from '@/components/whatsapp-icon';
 import { LEAD_SOURCES } from '@/lib/lead-constants';
 import { normalizeEnquiryCategories, normalizeEnquiryTypes } from '@/lib/enquiry-vocabulary';
 import { getCachedEligibleUsers, getCachedEnquiryTypes, getCachedMaster } from '@/lib/master-options-cache';
+import { GeneratedAvatar } from '@/components/generated-avatar';
 
 interface NavigateFn { (route: string, arg?: any): void; }
 
@@ -475,7 +476,7 @@ export function LeadDetailPage({ leadId, navigate }: { leadId: number; navigate:
                 {data.activities.map((a: any) => (
                   <div key={a.id} className="border-l-2 border-[var(--gold)] pl-3 py-1">
                     <div className="font-medium capitalize">{a.action.replace('_',' ')}</div>
-                    <div className="text-xs text-muted-foreground">{a.user_name || 'System'} · {timeAgo(a.created_at)}</div>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground"><div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-border bg-muted">{a.user_avatar_data ? <img src={a.user_avatar_data} alt={`${a.user_name || 'User'} profile`} className="block h-full w-full rounded-full object-cover object-center" /> : <GeneratedAvatar seed={`${a.user_id || 'system'}:${a.user_name || ''}`} name={a.user_name || 'System'} size={24} />}</div><span>{a.user_name || 'System'} · {timeAgo(a.created_at)}</span></div>
                     {a.details && <div className="text-xs text-muted-foreground">{formatActivityDetails(a.action, a.details)}</div>}
                   </div>
                 ))}
