@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { StatusBadge, PriorityBadge, formatDate, timeAgo } from '@/components/ui-shared';
+import { StatusBadge, PriorityBadge, formatDate } from '@/components/ui-shared';
 import { toast } from 'sonner';
 import { ArrowLeft, Phone, Mail, MapPin, Store, Car, Ticket, Flag, UserCog, CalendarPlus, PenSquare, Trash2, ChevronRight } from 'lucide-react';
 import { WhatsAppIcon } from '@/components/whatsapp-icon';
@@ -476,7 +476,7 @@ export function LeadDetailPage({ leadId, navigate }: { leadId: number; navigate:
                 {data.activities.map((a: any) => (
                   <div key={a.id} className="border-l-2 border-[var(--gold)] pl-3 py-1">
                     <div className="font-medium capitalize">{a.action.replace('_',' ')}</div>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground"><div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-border bg-muted">{a.user_avatar_data ? <img src={a.user_avatar_data} alt={`${a.user_name || 'User'} profile`} className="block h-full w-full rounded-full object-cover object-center" /> : <GeneratedAvatar seed={`${a.user_id || 'system'}:${a.user_name || ''}`} name={a.user_name || 'System'} size={24} />}</div><span>{a.user_name || 'System'} · {timeAgo(a.created_at)}</span></div>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground"><div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-border bg-muted">{a.user_avatar_data ? <img src={a.user_avatar_data} alt={`${a.user_name || 'User'} profile`} className="block h-full w-full rounded-full object-cover object-center" /> : <GeneratedAvatar seed={`${a.user_id || 'system'}:${a.user_name || ''}`} name={a.user_name || 'System'} size={24} />}</div><span>{a.user_name || 'System'} · {formatDate(a.created_at, true, true)}</span></div>
                     {a.details && <div className="text-xs text-muted-foreground">{formatActivityDetails(a.action, a.details)}</div>}
                   </div>
                 ))}

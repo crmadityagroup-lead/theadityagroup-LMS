@@ -76,11 +76,15 @@ export function timeAgo(d?: string | null) {
   return dt.toLocaleDateString('en-IN');
 }
 
-export function formatDate(d?: string | null, withTime = false) {
+export function formatDate(d?: string | null, withTime = false, withSeconds = false) {
   if (!d) return '—';
   const dt = new Date(d);
   if (isNaN(dt.getTime())) return '—';
   const opts: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: '2-digit' };
-  if (withTime) { opts.hour = '2-digit'; opts.minute = '2-digit'; }
+  if (withTime) {
+    opts.hour = '2-digit';
+    opts.minute = '2-digit';
+    if (withSeconds) opts.second = '2-digit';
+  }
   return dt.toLocaleString('en-IN', opts);
 }
