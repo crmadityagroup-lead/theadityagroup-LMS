@@ -5,7 +5,7 @@ import type { AuthUser } from './auth';
 
 export async function getOperatorDealers(user: AuthUser) {
   const allDealersRoles = ['super_admin', 'admin', 'data_operator_1'];
-  const singleDealerRoles = ['data_operator_2', 'department_user'];
+  const singleDealerRoles = ['admin_2', 'data_operator_2', 'department_user'];
   if (allDealersRoles.includes(user.role)) {
     if (user.role === 'data_operator_1' && user.dealer_id) {
       return db.crmDealer.findMany({ where: { id: user.dealer_id, active: true }, select: { id: true, name: true, code: true, brand: true } });

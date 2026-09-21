@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthCtx = {
     user, loading, refresh, setUserDirect,
-    isAdmin: () => !!user && ['super_admin', 'admin'].includes(user.role),
+    isAdmin: () => !!user && ['super_admin', 'admin', 'admin_2'].includes(user.role),
     isSuperAdmin: () => user?.role === 'super_admin',
     isOperator: () => !!user && ['data_operator_1', 'data_operator_2'].includes(user.role),
     logout,

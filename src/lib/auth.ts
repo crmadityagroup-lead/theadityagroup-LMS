@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 export const ROLES = {
   SUPER_ADMIN: 'super_admin',
   ADMIN: 'admin',
+  ADMIN_2: 'admin_2',
   DATA_OP_1: 'data_operator_1',
   DATA_OP_2: 'data_operator_2',
   DEPT_USER: 'department_user',
@@ -128,7 +129,7 @@ export function clearAuthCookie() {
 
 // Role helpers
 export function isAdmin(user: AuthUser | null) {
-  return !!user && ([ROLES.SUPER_ADMIN, ROLES.ADMIN] as string[]).includes(user.role);
+  return !!user && ([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ADMIN_2] as string[]).includes(user.role);
 }
 export function isSuperAdmin(user: AuthUser | null) {
   return user?.role === ROLES.SUPER_ADMIN;
@@ -140,7 +141,7 @@ export function isOperator(user: AuthUser | null) {
 /** Dealers visible to this user: null = all dealers, [] = none, [ids] = specific dealers */
 export function visibleDealerIds(user: AuthUser): number[] | null {
   const allDealersRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DATA_OP_1];
-  const singleDealerRoles = [ROLES.DATA_OP_2, ROLES.DEPT_USER];
+  const singleDealerRoles = [ROLES.ADMIN_2, ROLES.DATA_OP_2, ROLES.DEPT_USER];
   if ((allDealersRoles as string[]).includes(user.role)) {
     if (user.role === ROLES.DATA_OP_1 && user.dealer_id) {
       return [user.dealer_id];
@@ -155,7 +156,7 @@ export function visibleDealerIds(user: AuthUser): number[] | null {
 
 /** Department scope: null = all departments, string = only that department */
 export function visibleDepartment(user: AuthUser): string | null {
-  if (([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.DATA_OP_1, ROLES.DATA_OP_2] as string[]).includes(user.role)) {
+  if (([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ADMIN_2, ROLES.DATA_OP_1, ROLES.DATA_OP_2] as string[]).includes(user.role)) {
     return null;
   }
   return user.department;
@@ -169,7 +170,7 @@ export function seesOnlyCreatedLeads(user: AuthUser) {
   return ([ROLES.DATA_OP_1, ROLES.DATA_OP_2] as string[]).includes(user.role);
 }
 export function canManageLeads(user: AuthUser | null) {
-  return !!user && ([ROLES.SUPER_ADMIN, ROLES.ADMIN] as string[]).includes(user.role);
+  return !!user && ([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ADMIN_2] as string[]).includes(user.role);
 }
 
 export type LeadAction =
@@ -192,7 +193,7 @@ export function authorizeLeadAction(user: AuthUser | null, lead: LeadAuthorizati
   if (dealerIds !== null && !dealerIds.includes(lead.dealerId)) return false;
 
   if (['DELETE', 'RESTORE', 'PERMANENT_DELETE'].includes(action)) {
-    return user.role === ROLES.ADMIN;
+    return ([ROLES.ADMIN, ROLES.ADMIN_2] as string[]).includes(user.role);
   }
 
   // Department Users may update the status, remark, and follow-up on their
@@ -202,6 +203,6 @@ export function authorizeLeadAction(user: AuthUser | null, lead: LeadAuthorizati
   }
   if (seesOnlyCreatedLeads(user) && lead.createdBy !== user.id) return false;
 
-  return [ROLES.ADMIN, ROLES.DATA_OP_1, ROLES.DATA_OP_2].includes(user.role as any) &&
+  return [ROLES.ADMIN, ROLES.ADMIN_2, ROLES.DATA_OP_1, ROLES.DATA_OP_2].includes(user.role as any) &&
     ['VIEW', 'UPDATE', 'ADD_FOLLOWUP', 'UPDATE_DEPARTMENT', 'ASSIGN', 'REASSIGN', 'CHANGE_STATUS'].includes(action);
 }

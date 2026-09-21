@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
   const b = await req.json();
   const nextRole = b.role ?? target.role;
-  if (b.role && ['data_operator_2', 'department_user'].includes(nextRole) && !b.dealer_id) {
+  if (b.role && ['admin_2', 'data_operator_2', 'department_user'].includes(nextRole) && !b.dealer_id) {
     return NextResponse.json({ error: 'Dealer is required for this role' }, { status: 400 });
   }
   if (b.role && nextRole === 'department_user' && !b.department) {

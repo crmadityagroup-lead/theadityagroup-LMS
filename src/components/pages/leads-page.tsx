@@ -140,7 +140,7 @@ export function LeadsPage({ navigate, highlightId }: { navigate: NavigateFn; hig
                    <th className="text-left py-2 px-3 font-medium">Priority</th>
                    <th className="text-left py-2 px-3 font-medium">Status</th>
                    <th className="text-left py-2 px-3 font-medium">Assigned To</th>
-                   {user?.role === 'super_admin' || user?.role === 'admin' ? <th className="text-left py-2 px-3 font-medium">Created By</th> : null}
+                   {['super_admin', 'admin', 'admin_2'].includes(user?.role || '') ? <th className="text-left py-2 px-3 font-medium">Created By</th> : null}
                  </tr>
                </thead>
                <tbody>
@@ -154,7 +154,7 @@ export function LeadsPage({ navigate, highlightId }: { navigate: NavigateFn; hig
                      <td className="py-2 px-3"><PriorityBadge priority={l.priority} /></td>
                      <td className="py-2 px-3"><StatusBadge status={l.status} /></td>
                      <td className="py-2 px-3 text-xs">{l.assigned_user_name || '—'}</td>
-                     {user?.role === 'super_admin' || user?.role === 'admin' ? <td className="py-2 px-3 text-xs text-muted-foreground">{l.created_by_name || '—'}</td> : null}
+                     {['super_admin', 'admin', 'admin_2'].includes(user?.role || '') ? <td className="py-2 px-3 text-xs text-muted-foreground">{l.created_by_name || '—'}</td> : null}
                    </tr>
                  ))}
                </tbody>

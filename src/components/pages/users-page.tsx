@@ -42,7 +42,7 @@ export function UsersPage() {
   const [recycleTarget, setRecycleTarget] = useState<{ id: number; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const isDealerScoped = ['data_operator_2', 'department_user'].includes(form.role);
+  const isDealerScoped = ['admin_2', 'data_operator_2', 'department_user'].includes(form.role);
 
   async function load() {
     setLoading(true);
@@ -232,7 +232,7 @@ export function UsersPage() {
             <div><Label>Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div><Label>Email *</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} disabled={!!editing} />{editing && <p className="text-xs text-muted-foreground">Email cannot be changed</p>}</div>
             <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-            <div><Label>Role *</Label><Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v, dealer_id: ['super_admin', 'admin', 'data_operator_1'].includes(v) ? '' : form.dealer_id, department: v === 'department_user' ? form.department : '' })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['super_admin','admin','data_operator_1','data_operator_2','department_user'].map(r => <SelectItem key={r} value={r}>{r.replaceAll('_',' ')}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>Role *</Label><Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v, dealer_id: ['super_admin', 'admin', 'data_operator_1'].includes(v) ? '' : form.dealer_id, department: v === 'department_user' ? form.department : '' })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['super_admin','admin','admin_2','data_operator_1','data_operator_2','department_user'].map(r => <SelectItem key={r} value={r}>{r.replaceAll('_',' ')}</SelectItem>)}</SelectContent></Select></div>
             {isDealerScoped && <div><Label>Dealer *</Label><Select value={form.dealer_id ? String(form.dealer_id) : ''} onValueChange={(v) => setForm({ ...form, dealer_id: v })}><SelectTrigger><SelectValue placeholder="Select dealer" /></SelectTrigger><SelectContent>{dealers.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}</SelectContent></Select></div>}
             {form.role === 'department_user' && <div><Label>Department *</Label><Select value={form.department || ''} onValueChange={(v) => setForm({ ...form, department: v })}><SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select></div>}
           </div>

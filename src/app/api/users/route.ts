@@ -49,9 +49,9 @@ export async function POST(req: NextRequest) {
   if (!isSuperAdmin(user)) return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
   const b = await req.json();
   if (!b.name || !b.email || !b.role) return NextResponse.json({ error: 'name, email, role are required' }, { status: 400 });
-  const validRoles = ['super_admin', 'admin', 'data_operator_1', 'data_operator_2', 'department_user'];
+  const validRoles = ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2', 'department_user'];
   if (!validRoles.includes(b.role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
-  if (['data_operator_2', 'department_user'].includes(b.role) && !b.dealer_id) {
+  if (['admin_2', 'data_operator_2', 'department_user'].includes(b.role) && !b.dealer_id) {
     return NextResponse.json({ error: 'Dealer is required for this role' }, { status: 400 });
   }
   if (b.role === 'department_user' && !b.department) {

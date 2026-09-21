@@ -361,9 +361,9 @@ export function LeadDetailPage({ leadId, navigate }: { leadId: number; navigate:
   if (!data) return <div className="py-12 text-center text-muted-foreground animate-pulse">Loading lead…</div>;
 
   const l = data.lead;
-  const canEdit = ['super_admin', 'admin'].includes(user?.role || '') ||
+  const canEdit = ['super_admin', 'admin', 'admin_2'].includes(user?.role || '') ||
     (['data_operator_1', 'data_operator_2'].includes(user?.role || '') && l.created_by === user?.id);
-  const canRecycle = ['super_admin', 'admin'].includes(user?.role || '');
+  const canRecycle = ['super_admin', 'admin', 'admin_2'].includes(user?.role || '');
   const canUpdate = user?.role === 'department_user' &&
     (l.assigned_user_id === user.id || l.assigned_users?.some((assigned: any) => assigned.id === user.id));
 

@@ -62,7 +62,9 @@ export async function GET(req: NextRequest) {
   // Admin should NOT see super_admin users' performance
   const workloadUserWhere = user.role === ROLES.ADMIN
     ? `${fullWhere} AND (au.role IS NULL OR au.role <> 'super_admin')`
-    : fullWhere;
+    : user.role === ROLES.ADMIN_2
+      ? `${fullWhere} AND (au.role IS NULL OR au.role NOT IN ('super_admin', 'admin', 'admin_2'))`
+      : fullWhere;
   const workloadRoleFilter = filters.get('role') ? ` AND au.role = $${idx}` : '';
   const workloadParams = filters.get('role') ? [...params, filters.get('role')] : params;
   const userWorkload = await db.$queryRawUnsafe(

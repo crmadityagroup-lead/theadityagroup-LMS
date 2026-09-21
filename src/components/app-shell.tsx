@@ -37,15 +37,15 @@ interface NavItem {
 }
 
 const PAGES: NavItem[] = [
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'data_operator_1', 'data_operator_2', 'department_user'] },
-  { key: 'leads', label: 'Leads', icon: ClipboardList, roles: ['super_admin', 'admin', 'data_operator_1', 'data_operator_2', 'department_user'] },
+  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2', 'department_user'] },
+  { key: 'leads', label: 'Leads', icon: ClipboardList, roles: ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2', 'department_user'] },
   { key: 'leads-new', label: 'Add Entry', icon: Plus, roles: ['data_operator_1', 'data_operator_2'] },
   { key: 'models', label: 'Models', icon: Car, roles: ['super_admin'] },
   { key: 'users', label: 'Users', icon: Users, roles: ['super_admin'] },
-  { key: 'reports', label: 'Reports', icon: BarChart3, roles: ['super_admin', 'admin', 'data_operator_1', 'data_operator_2'] },
-  { key: 'performance', label: 'Performance', icon: TrendingUp, roles: ['super_admin', 'admin'] },
+  { key: 'reports', label: 'Reports', icon: BarChart3, roles: ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2'] },
+  { key: 'performance', label: 'Performance', icon: TrendingUp, roles: ['super_admin', 'admin', 'admin_2'] },
   { key: 'login-history', label: 'Login History', icon: Clock, roles: ['super_admin'] },
-  { key: 'recycle-bin', label: 'Recycle Bin', icon: Recycle, roles: ['super_admin', 'admin'] },
+  { key: 'recycle-bin', label: 'Recycle Bin', icon: Recycle, roles: ['super_admin', 'admin', 'admin_2'] },
   { key: 'theme', label: 'Theme', icon: Palette, roles: ['super_admin'] },
   { key: 'backup', label: 'Backup & Restore', icon: DatabaseBackup, roles: ['super_admin'] },
   { key: 'support-tickets', label: 'Help Requests', icon: HelpCircle, roles: ['super_admin'] },
@@ -55,6 +55,7 @@ const PAGES: NavItem[] = [
 const ROLE_TABS: Record<string, string[]> = {
   super_admin: ['dashboard', 'leads', 'models', 'users', 'reports', 'performance', 'login-history', 'recycle-bin', 'theme', 'backup', 'support-tickets', 'database-health'],
   admin: ['dashboard', 'leads', 'reports', 'performance', 'recycle-bin', 'database-health'],
+  admin_2: ['dashboard', 'leads', 'reports', 'performance', 'recycle-bin'],
   data_operator_1: ['dashboard', 'leads', 'leads-new', 'reports'],
   data_operator_2: ['dashboard', 'leads', 'leads-new', 'reports'],
   department_user: ['dashboard', 'leads'],
@@ -214,7 +215,7 @@ export function AppShell() {
         </footer>
       </div>
 
-      <ClearAppCacheButton canClear={['super_admin', 'admin'].includes(normalizeRole(user.role))} />
+      <ClearAppCacheButton canClear={['super_admin', 'admin', 'admin_2'].includes(normalizeRole(user.role))} />
 
       <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <AlertDialogContent>

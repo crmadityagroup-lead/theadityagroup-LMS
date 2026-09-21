@@ -24,6 +24,7 @@ export function RoleBadge({ role }: { role: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     super_admin: { label: 'Super Admin', cls: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
     admin: { label: 'Admin', cls: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' },
+    admin_2: { label: 'Dealer Admin', cls: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' },
     data_operator_1: { label: 'Data Operator 1', cls: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
     data_operator_2: { label: 'Data Operator 2', cls: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
     department_user: { label: 'Dept User', cls: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },

@@ -63,7 +63,7 @@ export function DashboardPage({ navigate }: { navigate: NavigateFn }) {
   const [loading, setLoading] = useState(true);
   const [widgets, setWidgets] = useState<Record<string, boolean>>({ stats: true, 'dealer-chart': true, 'status-chart': true, 'department-chart': true, 'recent-leads': true });
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
-  const isDealerLocked = !!user?.dealer_id && ['data_operator_2', 'department_user'].includes(user.role);
+  const isDealerLocked = !!user?.dealer_id && ['admin_2', 'data_operator_2', 'department_user'].includes(user.role);
   const lockedDealerId = isDealerLocked && user?.dealer_id ? String(user.dealer_id) : '';
   const isDepartmentLocked = user?.role === 'department_user' && !!user.department;
   const lockedDepartment = isDepartmentLocked ? (user.department || '') : '';
@@ -135,7 +135,7 @@ export function DashboardPage({ navigate }: { navigate: NavigateFn }) {
     name: status.replace('_', ' '), value: count, status,
   }));
   const deptChartData = data.by_department.map((d: any) => ({ department: d.department || 'None', name: d.department || 'None', leads: d.c }));
-  const showRecentLeads = ['super_admin', 'admin'].includes(user?.role || '');
+  const showRecentLeads = ['super_admin', 'admin', 'admin_2'].includes(user?.role || '');
 
   return (
     <div key={themeVersion} className="space-y-6">
