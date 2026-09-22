@@ -8,6 +8,8 @@ export const DEPARTMENTS = [
   'Insurance',
   'Bodyshop',
   'Used Car',
+  'Emergency Breakdown',
+  'Others',
 ] as const;
 
 export const ENQUIRY_TYPES = ['Query/Enquiry', 'Complain /Concern'] as const;
@@ -22,7 +24,6 @@ const ALIASES: Record<string, string> = {
   'Used Manager': 'Used Car',
   'Finance & Insurance': 'Finance',
   Registration: 'Accessories',
-  'Emergency Breakdown': 'Service',
 };
 
 export function canonicalDepartment(value: string | null | undefined) {

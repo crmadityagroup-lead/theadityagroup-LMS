@@ -4,9 +4,12 @@ const typesCache = new Map<string, Promise<any>>();
 const usersCache = new Map<string, Promise<any>>();
 const masterCache = new Map<string, Promise<any>>();
 const MASTER_CACHE_TTL_MS = 5 * 60 * 1000;
+// Bump this when the master catalogue changes so old browser sessions do not
+// hide newly added categories or enquiry types for up to five minutes.
+const MASTER_CATALOGUE_VERSION = 'v2';
 
 function storageKey(path: string) {
-  return `crm:master-cache:${path}`;
+  return `crm:master-cache:${MASTER_CATALOGUE_VERSION}:${path}`;
 }
 
 // Only these lookup lists are global. Dealer and eligible-user responses are
