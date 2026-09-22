@@ -10,8 +10,14 @@ export async function GET() {
   if (!isAdmin(user)) return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   const startedAt = performance.now();
   try {
-    const [health, dealers, brands, models, enquiryCategories, enquiryTypes, users, supportTickets, otpRecords, userEnquiryTypes, leads, activities, followups, departmentUpdates, loginHistory, databaseTime] = await Promise.all([
+    const [health, databaseTime] = await Promise.all([
       db.$queryRawUnsafe<Array<{ ok: number }>>('SELECT 1 AS ok'),
+      db.$queryRawUnsafe<Array<{ database_time: Date }>>('SELECT NOW() AS database_time'),
+    ]);
+    // Counts are useful diagnostics, but should not inflate the connection
+    // latency displayed to the user.
+    const latencyMs = Math.round(performance.now() - startedAt);
+    const [dealers, brands, models, enquiryCategories, enquiryTypes, users, supportTickets, otpRecords, userEnquiryTypes, leads, activities, followups, departmentUpdates, loginHistory] = await Promise.all([
       db.crmDealer.count(),
       db.crmBrand.count(),
       db.crmModel.count(),
@@ -26,9 +32,7 @@ export async function GET() {
       db.crmLeadFollowup.count(),
       db.crmDepartmentUpdate.count(),
       db.crmLoginHistory.count(),
-      db.$queryRawUnsafe<Array<{ database_time: Date }>>('SELECT NOW() AS database_time'),
     ]);
-    const latencyMs = Math.round(performance.now() - startedAt);
     const status = latencyMs < 300 ? 'Excellent' : latencyMs < 800 ? 'Good' : latencyMs < 2000 ? 'Slow' : 'Degraded';
     return NextResponse.json({
       status,

@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 
 let assigneeTableReady: Promise<void> | null = null;
 
@@ -16,10 +17,12 @@ export async function setLeadAssignees(leadId: number, userIds: number[]) {
   const uniqueIds = [...new Set(userIds)].filter(Number.isInteger);
   await ensureLeadAssigneeTable();
   await db.$executeRawUnsafe('DELETE FROM crm_lead_assignees WHERE lead_id = $1', leadId);
-  await Promise.all(uniqueIds.map((userId, index) => db.$executeRawUnsafe(
-    'INSERT INTO crm_lead_assignees (lead_id, user_id, is_primary) VALUES ($1, $2, $3) ON CONFLICT (lead_id, user_id) DO UPDATE SET is_primary = EXCLUDED.is_primary',
-    leadId, userId, index === 0
-  )));
+  if (!uniqueIds.length) return;
+  await db.$executeRaw(Prisma.sql`
+    INSERT INTO crm_lead_assignees (lead_id, user_id, is_primary)
+    VALUES ${Prisma.join(uniqueIds.map((userId, index) => Prisma.sql`(${leadId}, ${userId}, ${index === 0})`))}
+    ON CONFLICT (lead_id, user_id) DO UPDATE SET is_primary = EXCLUDED.is_primary
+  `);
 }
 
 export async function getLeadAssignees(leadId: number) {

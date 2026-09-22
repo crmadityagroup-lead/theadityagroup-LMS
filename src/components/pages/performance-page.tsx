@@ -59,7 +59,14 @@ export function PerformancePage() {
   const total = data?.total || 0;
   const converted = data?.converted || 0;
   const activePipeline = total - (statusMap.converted || 0) - (statusMap.closed || 0) - (statusMap.lost || 0) - (statusMap.recycled || 0);
-  const performanceUsers = useMemo(() => (data?.user_workload || []).filter((row: any) => !role || row.role === role), [data, role]);
+  const performanceUsers = useMemo(() => (data?.performance_users || []).filter((performanceUser: any) =>
+    (!dealer || String(performanceUser.dealer_id) === dealer) && (!role || performanceUser.role === role)
+  ), [data, dealer, role]);
+  const visibleRoles = isSuperAdmin
+    ? ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2', 'department_user']
+    : user?.role === 'admin_2'
+      ? ['data_operator_1', 'data_operator_2', 'department_user']
+      : ['admin_2', 'data_operator_1', 'data_operator_2', 'department_user'];
 
   if (!isAdmin()) return <div className="p-8 text-center text-muted-foreground">Access denied - Admin+ only</div>;
 
@@ -93,11 +100,11 @@ export function PerformancePage() {
                   <SelectValue placeholder="All roles" />
                 </SelectTrigger>
                 <SelectContent>
-                  {isSuperAdmin && <SelectItem value="super_admin">Super Admin</SelectItem>}
-                  <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="data_operator_1">Data Operator 1</SelectItem>
-                        <SelectItem value="data_operator_2">Data Operator 2</SelectItem>
-                  <SelectItem value="department_user">Department User</SelectItem>
+                  {visibleRoles.map((availableRole) => (
+                    <SelectItem key={availableRole} value={availableRole}>
+                      {availableRole.replaceAll('_', ' ')}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -108,9 +115,9 @@ export function PerformancePage() {
                   <SelectValue placeholder={role ? 'Select user' : 'All users'} />
                 </SelectTrigger>
                 <SelectContent>
-                  {performanceUsers.filter((row: any) => row.user_id).map((row: any) => (
-                    <SelectItem key={row.user_id} value={String(row.user_id)}>
-                      {row.user_name}
+                  {performanceUsers.map((performanceUser: any) => (
+                    <SelectItem key={performanceUser.id} value={String(performanceUser.id)}>
+                      {performanceUser.name} {performanceUser.dealer_name ? `(${performanceUser.dealer_name})` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>

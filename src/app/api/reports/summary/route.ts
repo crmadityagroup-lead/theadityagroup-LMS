@@ -40,7 +40,10 @@ export async function GET(req: NextRequest) {
   if (filters.get('status')) { conds.push(`l.status = $${idx}`); params.push(filters.get('status')); idx++; }
   if (filters.get('priority')) { conds.push(`l.priority = $${idx}`); params.push(filters.get('priority')); idx++; }
   if (filters.get('source')) { conds.push(`l.source = $${idx}`); params.push(filters.get('source')); idx++; }
-  if (filters.get('assigned_user_id')) { conds.push(`l.assigned_user_id = $${idx}`); params.push(parseInt(filters.get('assigned_user_id')!, 10)); idx++; }
+  const selectedPerformanceUserId = filters.get('assigned_user_id') ? parseInt(filters.get('assigned_user_id')!, 10) : null;
+  if (filters.get('assigned_user_id') && (!Number.isInteger(selectedPerformanceUserId) || selectedPerformanceUserId! < 1)) {
+    return NextResponse.json({ error: 'Invalid assigned_user_id' }, { status: 400 });
+  }
 
   const fullWhere = conds.length ? conds.join(' AND ') : 'TRUE';
 
@@ -60,21 +63,50 @@ export async function GET(req: NextRequest) {
 
   // User-wise workload — include user role + email for performance report
   // Admin should NOT see super_admin users' performance
-  const workloadUserWhere = user.role === ROLES.ADMIN
-    ? `${fullWhere} AND (au.role IS NULL OR au.role <> 'super_admin')`
-    : user.role === ROLES.ADMIN_2
-      ? `${fullWhere} AND (au.role IS NULL OR au.role NOT IN ('super_admin', 'admin', 'admin_2'))`
-      : fullWhere;
-  const workloadRoleFilter = filters.get('role') ? ` AND au.role = $${idx}` : '';
-  const workloadParams = filters.get('role') ? [...params, filters.get('role')] : params;
+  const workloadConditions: string[] = [];
+  if (user.role === ROLES.ADMIN) workloadConditions.push(`au.role NOT IN ('super_admin', 'admin')`);
+  if (user.role === ROLES.ADMIN_2) workloadConditions.push(`au.role NOT IN ('super_admin', 'admin', 'admin_2')`);
+  const workloadParams = [...params];
+  if (filters.get('role')) { workloadConditions.push(`au.role = $${idx}`); workloadParams.push(filters.get('role')); idx++; }
+  if (selectedPerformanceUserId) { workloadConditions.push(`au.id = $${idx}`); workloadParams.push(selectedPerformanceUserId); idx++; }
+  const workloadWhere = workloadConditions.length ? `WHERE ${workloadConditions.join(' AND ')}` : '';
   const userWorkload = await db.$queryRawUnsafe(
-    `SELECT au.id AS user_id, au.name AS user_name, au.email AS user_email, au.role, au.department, d.name AS dealer_name, COUNT(*)::int AS c,
-       COUNT(*) FILTER (WHERE l.status NOT IN ('converted','closed','lost','recycled'))::int AS active_count,
-       COUNT(*) FILTER (WHERE l.status = 'converted')::int AS converted_count
-     FROM crm_leads l LEFT JOIN crm_users au ON au.id=l.assigned_user_id LEFT JOIN crm_dealers d ON d.id=l.dealer_id
-     WHERE ${workloadUserWhere}${workloadRoleFilter} GROUP BY au.id, au.name, au.email, au.role, au.department, d.name ORDER BY c DESC LIMIT 100`,
+    `WITH scoped_leads AS (
+       SELECT l.* FROM crm_leads l WHERE ${fullWhere}
+     ), performance_rows AS (
+       SELECT l.id AS lead_id, l.status, l.dealer_id, l.assigned_user_id AS user_id
+       FROM scoped_leads l JOIN crm_users u ON u.id = l.assigned_user_id
+       WHERE u.role NOT IN ('data_operator_1', 'data_operator_2')
+       UNION ALL
+       SELECT l.id AS lead_id, l.status, l.dealer_id, l.created_by AS user_id
+       FROM scoped_leads l JOIN crm_users u ON u.id = l.created_by
+       WHERE u.role IN ('data_operator_1', 'data_operator_2')
+     )
+     SELECT au.id AS user_id, au.name AS user_name, au.email AS user_email, au.role, au.department, d.name AS dealer_name, COUNT(*)::int AS c,
+       COUNT(*) FILTER (WHERE p.status NOT IN ('converted','closed','lost','recycled'))::int AS active_count,
+       COUNT(*) FILTER (WHERE p.status = 'converted')::int AS converted_count
+     FROM performance_rows p JOIN crm_users au ON au.id = p.user_id LEFT JOIN crm_dealers d ON d.id = p.dealer_id
+     ${workloadWhere} GROUP BY au.id, au.name, au.email, au.role, au.department, d.name ORDER BY c DESC LIMIT 100`,
     ...workloadParams
   );
+
+  // The role/user filter must offer every user the viewer is allowed to assess,
+  // including users who do not yet have any assigned leads.
+  const excludedPerformanceRoles = user.role === ROLES.ADMIN_2
+    ? ['super_admin', 'admin', 'admin_2']
+    : user.role === ROLES.ADMIN
+      ? ['super_admin', 'admin']
+      : [];
+  const performanceUsers = await db.crmUser.findMany({
+    where: {
+      active: true,
+      recycledAt: null,
+      ...(dealerIds === null ? {} : { dealerId: { in: dealerIds } }),
+      ...(excludedPerformanceRoles.length ? { role: { notIn: excludedPerformanceRoles } } : {}),
+    },
+    select: { id: true, name: true, email: true, role: true, department: true, dealerId: true, dealer: { select: { name: true } } },
+    orderBy: { name: 'asc' },
+  });
 
   const total = (totalRow as any[])[0]?.c || 0;
   const converted = (convertedRow as any[])[0]?.c || 0;
@@ -94,5 +126,14 @@ export async function GET(req: NextRequest) {
     by_source: bySource,
     by_status: byStatus,
     user_workload: userWorkload,
+    performance_users: performanceUsers.map((performanceUser) => ({
+      id: performanceUser.id,
+      name: performanceUser.name,
+      email: performanceUser.email,
+      role: performanceUser.role,
+      department: performanceUser.department,
+      dealer_id: performanceUser.dealerId,
+      dealer_name: performanceUser.dealer?.name || null,
+    })),
   });
 }

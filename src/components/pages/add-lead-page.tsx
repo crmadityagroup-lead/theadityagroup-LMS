@@ -47,8 +47,6 @@ export function AddLeadPage({ navigate }: { navigate: NavigateFn }) {
       setDealers(dealerResponse.dealers || []);
       const nextCategories = normalizeEnquiryCategories(categoryResponse.categories || []);
       setCategories(nextCategories);
-      // Warm the dependent lists while the user fills the first fields.
-      void Promise.all(nextCategories.map((category) => getCachedEnquiryTypes(String(category.id)).catch(() => null)));
       if (user?.role === 'data_operator_2' && user?.dealer_id && dealerResponse.dealers?.length === 1) setDealerId(String(dealerResponse.dealers[0].id));
     }).catch((error: any) => setMasterError(error.message || 'Unable to load form options'));
   }, [user]);

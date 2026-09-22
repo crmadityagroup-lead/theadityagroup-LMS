@@ -111,7 +111,8 @@ export function DashboardPage({ navigate }: { navigate: NavigateFn }) {
     setFilters(initialFilters);
     void loadDashboard(initialFilters);
     const refreshDashboard = () => void loadDashboard(initialFilters);
-    const interval = window.setInterval(refreshDashboard, 15000);
+    // Do not compete with form submissions and navigation on slow networks.
+    const interval = window.setInterval(refreshDashboard, 60000);
     window.addEventListener('crm:refresh', refreshDashboard);
     return () => {
       window.clearInterval(interval);

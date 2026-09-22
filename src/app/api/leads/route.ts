@@ -177,11 +177,11 @@ export async function POST(req: NextRequest) {
     db.crmLeadActivity.create({ data: { leadId: outcome.leadId!, userId: user.id, action: 'assigned', details: { assigned_to: assignedUserIds.length ? assignedUserIds : [primaryAssigneeId], department } } }),
     setLeadAssignees(outcome.leadId!, assignedUserIds.length ? assignedUserIds : [primaryAssigneeId]),
   ]);
-  try {
-    await sendPushToLeadUsers(outcome.leadId!, user.id, { title: 'New CRM Lead Assigned', body: 'A new lead was assigned to your team.', assignment: true });
-  } catch (error) {
+  // Notification providers can be slow on poor networks. The lead is already
+  // saved, so let the caller continue while delivery finishes in the background.
+  void sendPushToLeadUsers(outcome.leadId!, user.id, { title: 'New CRM Lead Assigned', body: 'A new lead was assigned to your team.', assignment: true }).catch((error) => {
     console.error('Push delivery failed after lead creation:', error);
-  }
+  });
 
   return NextResponse.json({ lead: { id: outcome.leadId, lead_code: outcome.leadCode }, message: 'Lead created and assigned' }, { status: 201 });
 }

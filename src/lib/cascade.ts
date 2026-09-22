@@ -43,49 +43,54 @@ export async function validateLeadCascade({ dealerId, brandId, modelId, enquiryT
   { dealerId: number; brandId?: number | null; modelId?: number | null; enquiryTypeId: number; assignedUserId?: number; operator: AuthUser }) {
   const errors: string[] = [];
 
-  const dealer = await db.crmDealer.findFirst({ where: { id: dealerId, active: true }, select: { id: true, brand: true } });
+  // These independent checks used to run serially. With a hosted database,
+  // each round trip is noticeable on a weak network, so fetch them together.
+  const [dealer, brand, model, enquiryType, assignedUser] = await Promise.all([
+    db.crmDealer.findFirst({ where: { id: dealerId, active: true }, select: { id: true, brand: true } }),
+    brandId ? db.crmBrand.findFirst({ where: { id: brandId, active: true }, select: { id: true, name: true, dealerId: true } }) : Promise.resolve(null),
+    modelId ? db.crmModel.findFirst({ where: { id: modelId, active: true }, select: { id: true, name: true, brandId: true } }) : Promise.resolve(null),
+    db.crmEnquiryType.findUnique({ where: { id: enquiryTypeId }, select: { id: true, name: true, categoryId: true, department: true } }),
+    assignedUserId ? db.crmUser.findUnique({ where: { id: assignedUserId }, select: { id: true, name: true, role: true, dealerId: true, department: true, active: true } }) : Promise.resolve(null),
+  ]);
+
   if (!dealer) {
     errors.push('Invalid or inactive dealer');
     return { valid: false, errors, derivedDepartment: null };
   }
 
-  const opDealers = await getOperatorDealers(operator);
-  if (!opDealers.find(d => d.id === dealerId)) {
+  const allowedDealerIds = visibleDealerIds(operator);
+  if (allowedDealerIds !== null && !allowedDealerIds.includes(dealerId)) {
     errors.push('Operator does not have access to this dealer');
   }
 
   if (brandId) {
-    const brand = await db.crmBrand.findFirst({ where: { id: brandId, active: true }, select: { id: true, name: true, dealerId: true } });
     if (!brand) {
       errors.push('Invalid brand');
     } else {
       if (brand.dealerId !== dealerId) errors.push('Brand does not belong to the selected dealer');
       else if (brand.name !== dealer.brand) errors.push(`Brand must be ${dealer.brand} for this dealer`);
     }
-    if (modelId) {
-      const model = await db.crmModel.findFirst({ where: { id: modelId, active: true }, select: { id: true, name: true, brandId: true } });
-      if (!model) errors.push('Invalid model');
-      else if (model.brandId !== brandId) errors.push('Model does not belong to the selected brand');
-    }
+  }
+  if (modelId) {
+    if (!model) errors.push('Invalid model');
+    else if (model.brandId !== brandId) errors.push('Model does not belong to the selected brand');
   }
 
-  const et = await db.crmEnquiryType.findUnique({ where: { id: enquiryTypeId }, select: { id: true, name: true, categoryId: true, department: true } });
-  if (!et) {
+  if (!enquiryType) {
     errors.push('Invalid enquiry type');
     return { valid: false, errors, derivedDepartment: null };
   }
-  const derivedDepartment = et.department;
+  const derivedDepartment = enquiryType.department;
 
   if (assignedUserId) {
-    const au = await db.crmUser.findUnique({ where: { id: assignedUserId }, select: { id: true, name: true, role: true, dealerId: true, department: true, active: true } });
-    if (!au) {
+    if (!assignedUser) {
       errors.push('Assigned user not found');
     } else {
-      if (!au.active) errors.push('Assigned user is not active');
-      if (au.role !== 'department_user') errors.push('Assigned user must be a department user');
-      if (au.dealerId !== dealerId) errors.push('Assigned user does not belong to the selected dealer');
-      if (au.department !== derivedDepartment) errors.push(`Assigned user must belong to the ${derivedDepartment} department`);
-      const perm = await db.crmUserEnquiryType.findFirst({ where: { userId: au.id, enquiryTypeId } });
+      if (!assignedUser.active) errors.push('Assigned user is not active');
+      if (assignedUser.role !== 'department_user') errors.push('Assigned user must be a department user');
+      if (assignedUser.dealerId !== dealerId) errors.push('Assigned user does not belong to the selected dealer');
+      if (assignedUser.department !== derivedDepartment) errors.push(`Assigned user must belong to the ${derivedDepartment} department`);
+      const perm = await db.crmUserEnquiryType.findFirst({ where: { userId: assignedUser.id, enquiryTypeId } });
       if (!perm) errors.push('Assigned user is not permitted for this enquiry type');
     }
   }
