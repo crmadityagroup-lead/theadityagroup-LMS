@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getCurrentUser, isSuperAdmin, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartment } from '@/lib/auth';
+import { getCurrentUser, isSuperAdmin, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartments } from '@/lib/auth';
 
 let supportTableReady: Promise<void> | null = null;
 let notificationDismissalTableReady: Promise<void> | null = null;
@@ -53,8 +53,8 @@ export async function GET(req: Request) {
     if (dealerIds.length === 0) return NextResponse.json({ notifications: [] });
     where.AND.push({ dealerId: { in: dealerIds } });
   }
-  const dept = visibleDepartment(user);
-  if (dept !== null) where.AND.push({ department: dept });
+  const departments = visibleDepartments(user);
+  if (departments !== null) where.AND.push({ department: { in: departments } });
   if (user.role === ROLES.DEPT_USER) where.AND.push({ assignedUserId: user.id });
   const isDataOperator = [ROLES.DATA_OP_1, ROLES.DATA_OP_2].includes(user.role as any);
   // A creator should not receive their own new-lead alert. Assignment and
@@ -62,7 +62,7 @@ export async function GET(req: Request) {
   if (seesOnlyCreatedLeads(user)) where.AND.push({ createdBy: { not: user.id } });
   const notificationLeadScope: any = {};
   if (dealerIds !== null) notificationLeadScope.dealerId = { in: dealerIds };
-  if (dept !== null) notificationLeadScope.department = dept;
+  if (departments !== null) notificationLeadScope.department = { in: departments };
   if (user.role === ROLES.DEPT_USER) notificationLeadScope.assignedUserId = user.id;
   if (seesOnlyCreatedLeads(user)) notificationLeadScope.createdBy = user.id;
 

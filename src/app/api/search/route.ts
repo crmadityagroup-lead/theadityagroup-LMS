@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getCurrentUser, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartment, isSuperAdmin } from '@/lib/auth';
+import { getCurrentUser, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartments, isSuperAdmin } from '@/lib/auth';
 
 // GET /api/search?q=<query> — search leads + users within scope
 export async function GET(req: NextRequest) {
@@ -20,9 +20,9 @@ export async function GET(req: NextRequest) {
     if (dealerIds.length === 0) return NextResponse.json({ leads: [], users: [] });
     where.AND = [{ dealerId: { in: dealerIds } }];
   }
-  const dept = visibleDepartment(user);
-  if (dept !== null) {
-    where.AND = [...(where.AND || []), { department: dept }];
+  const departments = visibleDepartments(user);
+  if (departments !== null) {
+    where.AND = [...(where.AND || []), { department: { in: departments } }];
   }
   if (user.role === ROLES.DEPT_USER) {
     where.AND = [...(where.AND || []), { assignedUserId: user.id }];

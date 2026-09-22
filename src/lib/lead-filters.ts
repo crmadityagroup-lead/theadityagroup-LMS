@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import type { AuthUser } from './auth';
-import { ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartment } from './auth';
+import { ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartments } from './auth';
 import { LEAD_SOURCES } from './lead-constants';
 
 export const LEAD_STATUSES = ['new', 'in_progress', 'follow_up', 'converted', 'closed', 'lost', 'recycled'] as const;
@@ -32,8 +32,8 @@ export function buildLeadFilters(user: AuthUser, params: URLSearchParams): Prism
     if (dealerIds.length === 0) and.push({ id: -1 });
     else and.push({ dealerId: { in: dealerIds } });
   }
-  const department = visibleDepartment(user);
-  if (department !== null) and.push({ department });
+  const departments = visibleDepartments(user);
+  if (departments !== null) and.push({ department: { in: departments } });
   if (user.role === ROLES.DEPT_USER) and.push({ assignedUserId: user.id });
   if (seesOnlyCreatedLeads(user)) and.push({ createdBy: user.id });
 

@@ -65,7 +65,7 @@ export function DashboardPage({ navigate }: { navigate: NavigateFn }) {
   const [widgetMenuOpen, setWidgetMenuOpen] = useState(false);
   const isDealerLocked = !!user?.dealer_id && ['admin_2', 'data_operator_2', 'department_user'].includes(user.role);
   const lockedDealerId = isDealerLocked && user?.dealer_id ? String(user.dealer_id) : '';
-  const isDepartmentLocked = user?.role === 'department_user' && !!user.department;
+  const isDepartmentLocked = user?.role === 'department_user' && (user.departments?.length ?? (user.department ? 1 : 0)) === 1;
   const lockedDepartment = isDepartmentLocked ? (user.department || '') : '';
 
   useEffect(() => {

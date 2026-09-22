@@ -25,6 +25,7 @@ export interface AuthUser {
   dealer_id: number | null;
   dealer_name?: string | null;
   department: string | null;
+  departments?: string[];
   active?: boolean;
   email_verified?: boolean;
   last_login_at?: string | null;
@@ -41,9 +42,9 @@ const COOKIE_NAME = 'crm_token';
 const AUTH_CACHE_TTL_MS = 10_000;
 const authCache = new Map<string, { user: AuthUser; expiresAt: number }>();
 
-export function signToken(user: { id: number; email: string; role: string; name: string; dealer_id: number | null; department: string | null }) {
+export function signToken(user: { id: number; email: string; role: string; name: string; dealer_id: number | null; department: string | null; departments?: string[] }) {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role, name: user.name, dealer_id: user.dealer_id, department: user.department },
+    { id: user.id, email: user.email, role: user.role, name: user.name, dealer_id: user.dealer_id, department: user.department, departments: user.departments || [] },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
@@ -79,7 +80,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   const [row, avatarRows] = await Promise.all([
     db.crmUser.findUnique({
     where: { id: decoded.id },
-    select: { id: true, name: true, email: true, phone: true, role: true, dealerId: true, department: true, active: true, emailVerified: true, lastLoginAt: true, lastActiveAt: true, createdAt: true, dealer: { select: { name: true } } },
+    select: { id: true, name: true, email: true, phone: true, role: true, dealerId: true, department: true, departments: true, active: true, emailVerified: true, lastLoginAt: true, lastActiveAt: true, createdAt: true, dealer: { select: { name: true } } },
     }),
     // Use a raw read for the optional avatar field so deployments with an older
     // generated Prisma client can still authenticate while rolling out this feature.
@@ -89,7 +90,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   // Map to snake_case for API response (frontend expects dealer_id, email_verified, etc.)
   const user: AuthUser = {
     id: row.id, name: row.name, email: row.email, phone: row.phone, avatar_data: avatarRows[0]?.avatar_data || null, role: row.role,
-    dealer_id: row.dealerId, dealer_name: row.dealer?.name || null, department: row.department, active: row.active,
+    dealer_id: row.dealerId, dealer_name: row.dealer?.name || null, department: row.department, departments: row.departments.length ? row.departments : (row.department ? [row.department] : []), active: row.active,
     email_verified: row.emailVerified, last_login_at: row.lastLoginAt as any,
     last_active_at: row.lastActiveAt as any, created_at: row.createdAt as any,
   };
@@ -154,12 +155,12 @@ export function visibleDealerIds(user: AuthUser): number[] | null {
   return [];
 }
 
-/** Department scope: null = all departments, string = only that department */
-export function visibleDepartment(user: AuthUser): string | null {
+/** Department scope: null = all departments, otherwise the user's permitted departments. */
+export function visibleDepartments(user: AuthUser): string[] | null {
   if (([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.ADMIN_2, ROLES.DATA_OP_1, ROLES.DATA_OP_2] as string[]).includes(user.role)) {
     return null;
   }
-  return user.department;
+  return user.departments?.length ? user.departments : (user.department ? [user.department] : []);
 }
 
 export function canCreateLead(user: AuthUser) {
@@ -199,7 +200,7 @@ export function authorizeLeadAction(user: AuthUser | null, lead: LeadAuthorizati
   // Department Users may update the status, remark, and follow-up on their
   // assigned department leads, but cannot edit the core lead or recycle it.
   if (user.role === ROLES.DEPT_USER) {
-    return ['VIEW', 'UPDATE_DEPARTMENT'].includes(action) && lead.department === user.department && lead.assignedUserId === user.id;
+    return ['VIEW', 'UPDATE_DEPARTMENT'].includes(action) && !!lead.department && visibleDepartments(user)?.includes(lead.department) && lead.assignedUserId === user.id;
   }
   if (seesOnlyCreatedLeads(user) && lead.createdBy !== user.id) return false;
 

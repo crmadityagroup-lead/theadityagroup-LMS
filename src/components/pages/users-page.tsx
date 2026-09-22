@@ -35,7 +35,7 @@ export function UsersPage() {
   const [allTypes, setAllTypes] = useState<any[]>([]);
   const [cats, setCats] = useState<any[]>([]);
   const [existingTypeIds, setExistingTypeIds] = useState<number[]>([]);
-  const [form, setForm] = useState<any>({ name: '', email: '', phone: '', role: 'department_user', dealer_id: '', department: '' });
+  const [form, setForm] = useState<any>({ name: '', email: '', phone: '', role: 'department_user', dealer_id: '', departments: [] });
   const [typeIds, setTypeIds] = useState<number[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
@@ -87,7 +87,7 @@ export function UsersPage() {
 
   async function openCreate() {
     setEditing(null);
-    setForm({ name: '', email: '', phone: '', role: 'department_user', dealer_id: '', department: '' });
+    setForm({ name: '', email: '', phone: '', role: 'department_user', dealer_id: '', departments: [] });
     setTypeIds([]);
     setModalOpen(true);
     const [d, t, c] = await Promise.all([getCachedMaster('/master/all-dealers'), getCachedMaster('/master/enquiry-types'), getCachedMaster('/master/enquiry-categories')]);
@@ -98,13 +98,13 @@ export function UsersPage() {
     const id = typeof summary === 'number' ? summary : summary.id;
     setEditLoading(true);
     setEditing(typeof summary === 'number' ? { id } : summary);
-    setForm(typeof summary === 'number' ? { name: '', email: '', phone: '', role: 'department_user', dealer_id: '', department: '' } : {
+    setForm(typeof summary === 'number' ? { name: '', email: '', phone: '', role: 'department_user', dealer_id: '', departments: [] } : {
       name: summary.name || '',
       email: summary.email || '',
       phone: summary.phone || '',
       role: summary.role || 'department_user',
       dealer_id: summary.dealer_id || '',
-      department: summary.department || '',
+      departments: summary.departments?.length ? summary.departments : (summary.department ? [summary.department] : []),
     });
     setExistingTypeIds([]);
     setTypeIds([]);
@@ -117,7 +117,7 @@ export function UsersPage() {
         getCachedMaster('/master/enquiry-categories'),
       ]);
       setEditing(r.user);
-      setForm({ name: r.user.name, email: r.user.email, phone: r.user.phone || '', role: r.user.role, dealer_id: r.user.dealer_id || '', department: r.user.department || '' });
+      setForm({ name: r.user.name, email: r.user.email, phone: r.user.phone || '', role: r.user.role, dealer_id: r.user.dealer_id || '', departments: r.user.departments?.length ? r.user.departments : (r.user.department ? [r.user.department] : []) });
       setExistingTypeIds(r.enquiry_types.map((t: any) => t.id));
       setTypeIds(r.enquiry_types.map((t: any) => t.id));
       setDealers(d.dealers || []); setAllTypes(normalizeEnquiryTypes(t.enquiry_types || [])); setCats(normalizeEnquiryCategories(c.categories || []));
@@ -132,7 +132,7 @@ export function UsersPage() {
     if (saving) return;
     if (!form.name || !form.email || !form.role) { toast.error('Name, email, role required'); return; }
     if (isDealerScoped && !form.dealer_id) { toast.error('Select a dealer for this role'); return; }
-    if (form.role === 'department_user' && !form.department) { toast.error('Select a department for this role'); return; }
+    if (form.role === 'department_user' && !form.departments?.length) { toast.error('Select at least one department for this role'); return; }
     setSaving(true);
     try {
       const body: any = { ...form, dealer_id: form.dealer_id ? parseInt(form.dealer_id, 10) : null };
@@ -208,7 +208,7 @@ export function UsersPage() {
                      <td className="py-2 px-3 text-muted-foreground">{u.email}</td>
                      <td className="py-2 px-3"><RoleBadge role={u.role} /></td>
                      <td className="py-2 px-3">{u.dealer_name || '— (Group)'}</td>
-                     <td className="py-2 px-3">{u.department || '—'}</td>
+                     <td className="py-2 px-3">{u.departments?.length ? u.departments.join(', ') : (u.department || '—')}</td>
                      <td className="py-2 px-3 text-muted-foreground">{u.phone || '—'}</td>
                      <td className="py-2 px-3">
                        <div className="flex items-center gap-2">
@@ -232,9 +232,9 @@ export function UsersPage() {
             <div><Label>Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div><Label>Email *</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} disabled={!!editing} />{editing && <p className="text-xs text-muted-foreground">Email cannot be changed</p>}</div>
             <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-            <div><Label>Role *</Label><Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v, dealer_id: ['super_admin', 'admin', 'data_operator_1'].includes(v) ? '' : form.dealer_id, department: v === 'department_user' ? form.department : '' })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['super_admin','admin','admin_2','data_operator_1','data_operator_2','department_user'].map(r => <SelectItem key={r} value={r}>{r.replaceAll('_',' ')}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>Role *</Label><Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v, dealer_id: ['super_admin', 'admin', 'data_operator_1'].includes(v) ? '' : form.dealer_id, departments: v === 'department_user' ? form.departments : [] })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['super_admin','admin','admin_2','data_operator_1','data_operator_2','department_user'].map(r => <SelectItem key={r} value={r}>{r.replaceAll('_',' ')}</SelectItem>)}</SelectContent></Select></div>
             {isDealerScoped && <div><Label>Dealer *</Label><Select value={form.dealer_id ? String(form.dealer_id) : ''} onValueChange={(v) => setForm({ ...form, dealer_id: v })}><SelectTrigger><SelectValue placeholder="Select dealer" /></SelectTrigger><SelectContent>{dealers.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}</SelectContent></Select></div>}
-            {form.role === 'department_user' && <div><Label>Department *</Label><Select value={form.department || ''} onValueChange={(v) => setForm({ ...form, department: v })}><SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select></div>}
+            {form.role === 'department_user' && <div className="sm:col-span-2"><Label>Departments *</Label><p className="mb-2 text-xs text-muted-foreground">Select every department this user can work with.</p><div className="flex flex-wrap gap-2 rounded-md border p-3">{DEPARTMENTS.map((department) => <label key={department} className="flex cursor-pointer items-center gap-2 rounded-md bg-muted px-2.5 py-1.5 text-sm"><Checkbox checked={form.departments?.includes(department)} onCheckedChange={(checked) => setForm({ ...form, departments: checked ? [...new Set([...(form.departments || []), department])] : (form.departments || []).filter((value: string) => value !== department) })} />{department}</label>)}</div></div>}
           </div>
           {editing && form.role === 'department_user' && (
             <div className="mt-3 border-t pt-3">

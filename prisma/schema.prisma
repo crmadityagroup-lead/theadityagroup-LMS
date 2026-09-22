@@ -94,6 +94,7 @@ model CrmUser {
   role          String
   dealerId      Int?      @map("dealer_id")
   department    String?
+  departments   String[]  @default([])
   active        Boolean   @default(true)
   emailVerified Boolean   @default(false) @map("email_verified")
   recycledAt    DateTime? @map("recycled_at")

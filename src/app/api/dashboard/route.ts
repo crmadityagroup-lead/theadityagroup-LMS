@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getCurrentUser, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartment } from '@/lib/auth';
+import { getCurrentUser, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartments } from '@/lib/auth';
 
 // GET /api/dashboard — role-scoped dashboard stats
 export async function GET(req: Request) {
@@ -35,8 +35,8 @@ export async function GET(req: Request) {
     if (dealerIds.length === 0) return NextResponse.json({ total: 0, by_status: {}, by_priority: {}, by_department: [], by_dealer: [], dealer_options: [], dealer_status_breakdown: [], followups_due_today: 0, overdue_followups: 0, new_unworked: 0, high_critical: 0, recently_assigned: 0, upcoming_followups: 0, recent_leads: [] });
     where.AND.push({ dealerId: { in: dealerIds } });
   }
-  const dept = visibleDepartment(user);
-  if (dept !== null) where.AND.push({ department: dept });
+  const departments = visibleDepartments(user);
+  if (departments !== null) where.AND.push({ department: { in: departments } });
   if (user.role === ROLES.DEPT_USER) where.AND.push({ assignedUserId: user.id });
   if (seesOnlyCreatedLeads(user)) where.AND.push({ createdBy: user.id });
   if (dealerFilter !== null) where.AND.push({ dealerId: dealerFilter });

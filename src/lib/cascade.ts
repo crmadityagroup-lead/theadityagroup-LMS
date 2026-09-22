@@ -30,10 +30,10 @@ export async function getEligibleUsers({ dealerId, department, enquiryTypeId }: 
       active: true,
       role: 'department_user',
       dealerId,
-      department,
+      departments: { has: department },
       enquiryTypes: { some: { enquiryTypeId } },
     },
-    select: { id: true, name: true, email: true, phone: true, department: true, role: true },
+    select: { id: true, name: true, email: true, phone: true, department: true, departments: true, role: true },
     orderBy: { name: 'asc' },
   });
 }
@@ -50,7 +50,7 @@ export async function validateLeadCascade({ dealerId, brandId, modelId, enquiryT
     brandId ? db.crmBrand.findFirst({ where: { id: brandId, active: true }, select: { id: true, name: true, dealerId: true } }) : Promise.resolve(null),
     modelId ? db.crmModel.findFirst({ where: { id: modelId, active: true }, select: { id: true, name: true, brandId: true } }) : Promise.resolve(null),
     db.crmEnquiryType.findUnique({ where: { id: enquiryTypeId }, select: { id: true, name: true, categoryId: true, department: true } }),
-    assignedUserId ? db.crmUser.findUnique({ where: { id: assignedUserId }, select: { id: true, name: true, role: true, dealerId: true, department: true, active: true } }) : Promise.resolve(null),
+    assignedUserId ? db.crmUser.findUnique({ where: { id: assignedUserId }, select: { id: true, name: true, role: true, dealerId: true, department: true, departments: true, active: true } }) : Promise.resolve(null),
   ]);
 
   if (!dealer) {
@@ -89,7 +89,7 @@ export async function validateLeadCascade({ dealerId, brandId, modelId, enquiryT
       if (!assignedUser.active) errors.push('Assigned user is not active');
       if (assignedUser.role !== 'department_user') errors.push('Assigned user must be a department user');
       if (assignedUser.dealerId !== dealerId) errors.push('Assigned user does not belong to the selected dealer');
-      if (assignedUser.department !== derivedDepartment) errors.push(`Assigned user must belong to the ${derivedDepartment} department`);
+      if (!assignedUser.departments.includes(derivedDepartment)) errors.push(`Assigned user must belong to the ${derivedDepartment} department`);
       const perm = await db.crmUserEnquiryType.findFirst({ where: { userId: assignedUser.id, enquiryTypeId } });
       if (!perm) errors.push('Assigned user is not permitted for this enquiry type');
     }

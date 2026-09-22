@@ -4,6 +4,12 @@ import { getCurrentUser, isSuperAdmin, visibleDealerIds } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { DEPARTMENTS } from '@/lib/department-constants';
+
+function requestedDepartments(body: any) {
+  const values: unknown[] = Array.isArray(body.departments) ? body.departments : (typeof body.department === 'string' ? [body.department] : []);
+  return [...new Set(values.filter((value): value is string => typeof value === 'string' && DEPARTMENTS.includes(value as typeof DEPARTMENTS[number])))];
+}
 
 // GET /api/users — list users within scope
 export async function GET() {
@@ -14,7 +20,7 @@ export async function GET() {
   if (user.role === 'department_user') {
     const me = await db.crmUser.findMany({
       where: { id: user.id },
-      select: { id: true, name: true, email: true, phone: true, role: true, dealerId: true, department: true, active: true, lastLoginAt: true, createdAt: true },
+      select: { id: true, name: true, email: true, phone: true, role: true, dealerId: true, department: true, departments: true, active: true, lastLoginAt: true, createdAt: true },
     });
     return NextResponse.json({ users: me });
   }
@@ -31,7 +37,7 @@ export async function GET() {
 
   const users = await db.crmUser.findMany({
     where,
-    select: { id: true, name: true, email: true, phone: true, role: true, dealerId: true, department: true, active: true, emailVerified: true, lastLoginAt: true, createdAt: true, dealer: { select: { name: true, code: true } } },
+    select: { id: true, name: true, email: true, phone: true, role: true, dealerId: true, department: true, departments: true, active: true, emailVerified: true, lastLoginAt: true, createdAt: true, dealer: { select: { name: true, code: true } } },
     orderBy: { createdAt: 'desc' },
   });
   const avatarRows = users.length
@@ -48,14 +54,15 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   if (!isSuperAdmin(user)) return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
   const b = await req.json();
+  const departments = requestedDepartments(b);
   if (!b.name || !b.email || !b.role) return NextResponse.json({ error: 'name, email, role are required' }, { status: 400 });
   const validRoles = ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2', 'department_user'];
   if (!validRoles.includes(b.role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
   if (['admin_2', 'data_operator_2', 'department_user'].includes(b.role) && !b.dealer_id) {
     return NextResponse.json({ error: 'Dealer is required for this role' }, { status: 400 });
   }
-  if (b.role === 'department_user' && !b.department) {
-    return NextResponse.json({ error: 'Department is required for department users' }, { status: 400 });
+  if (b.role === 'department_user' && departments.length === 0) {
+    return NextResponse.json({ error: 'Select at least one department for department users' }, { status: 400 });
   }
 
   const existing = await db.crmUser.findUnique({ where: { email: b.email }, select: { id: true, recycledAt: true } });
@@ -70,7 +77,7 @@ export async function POST(req: NextRequest) {
   const created = await db.crmUser.create({
     data: {
       name: b.name, email: b.email, phone: b.phone || null, passwordHash: hash,
-      role: b.role, dealerId: b.dealer_id || null, department: b.department || null,
+      role: b.role, dealerId: b.dealer_id || null, department: departments[0] || null, departments,
       active: b.active !== false, emailVerified: true,
     },
     select: { id: true },

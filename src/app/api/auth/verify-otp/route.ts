@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
       role: user.role,
       dealer_id: user.dealerId,
       department: user.department,
+      departments: user.departments,
     });
     const store = await cookies();
     store.set(setAuthCookie(token));
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
       token,
       user: {
         id: user.id, name: user.name, email: user.email, role: user.role,
-        dealer_id: user.dealerId, dealer_name: user.dealer?.name || null, department: user.department, email_verified: true,
+        dealer_id: user.dealerId, dealer_name: user.dealer?.name || null, department: user.department, departments: user.departments, email_verified: true,
       },
     });
   } catch (err: any) {

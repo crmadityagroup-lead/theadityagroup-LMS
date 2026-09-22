@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getCurrentUser, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartment } from '@/lib/auth';
+import { getCurrentUser, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartments } from '@/lib/auth';
 import { LEAD_STATUSES, LEAD_PRIORITIES } from '@/lib/lead-filters';
 
 // GET /api/reports/summary — aggregated report with role scoping
@@ -26,8 +26,8 @@ export async function GET(req: NextRequest) {
     if (dealerIds.length === 0) return NextResponse.json({ total: 0, converted: 0, conversion_rate: 0, viewer_role: user.role, by_status: [], by_dealer: [], by_brand: [], by_category: [], by_enquiry_type: [], by_department: [], by_source: [], user_workload: [] });
     conds.push(`l.dealer_id = ANY($${idx}::int[])`); params.push(dealerIds); idx++;
   }
-  const dept = visibleDepartment(user);
-  if (dept !== null) { conds.push(`l.department = $${idx}`); params.push(dept); idx++; }
+  const departments = visibleDepartments(user);
+  if (departments !== null) { conds.push(`l.department = ANY($${idx}::text[])`); params.push(departments); idx++; }
   if (user.role === ROLES.DEPT_USER) { conds.push(`l.assigned_user_id = $${idx}`); params.push(user.id); idx++; }
   if (seesOnlyCreatedLeads(user)) { conds.push(`l.created_by = $${idx}`); params.push(user.id); idx++; }
 

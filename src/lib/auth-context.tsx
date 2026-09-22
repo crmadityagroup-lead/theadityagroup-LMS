@@ -14,6 +14,7 @@ export interface CrmUser {
   dealer_id: number | null;
   dealer_name?: string | null;
   department: string | null;
+  departments?: string[];
   active?: boolean;
   email_verified?: boolean;
   last_login_at?: string | null;
