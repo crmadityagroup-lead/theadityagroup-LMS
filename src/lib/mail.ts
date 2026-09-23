@@ -155,3 +155,22 @@ export async function sendComplaintEscalationEmail(options: {
     html,
   });
 }
+
+export async function sendOpenEnquiryEscalationEmail(options: {
+  leadCode: string;
+  recipients: string[];
+  fields: Record<string, unknown>;
+}) {
+  const from = process.env.SMTP_FROM || `CRM <${process.env.SMTP_USER}>`;
+  const recipients = [...new Set(options.recipients.map((email) => String(email || '').trim().toLowerCase()).filter(Boolean))];
+  if (recipients.length === 0) return;
+  const escapeHtml = (value: unknown) => String(value ?? '—')
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+  const rows = Object.entries(options.fields)
+    .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '')
+    .map(([label, value]) => `<tr><td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;color:#71717a;width:38%">${escapeHtml(label)}</td><td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;color:#18181b">${escapeHtml(value)}</td></tr>`)
+    .join('');
+  const html = `<div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff"><div style="background:#b91c1c;color:#fff;padding:20px 24px;font-size:18px;font-weight:700">Open Enquiry Escalation</div><div style="padding:24px;color:#18181b"><p style="margin:0 0 16px;color:#52525b">This enquiry has remained open for more than 48 hours and requires attention.</p><table style="width:100%;border-collapse:collapse">${rows}</table></div><div style="padding:14px 24px;background:#fafaf9;border-top:1px solid #e5e7eb;font-size:11px;color:#71717a;text-align:center">© 2026 Aditya Group. All Rights Reserved.</div></div>`;
+  await sendMailWithFallback({ from, to: recipients.join(', '), subject: `Open enquiry escalation (48 hours): ${options.leadCode}`, html });
+}

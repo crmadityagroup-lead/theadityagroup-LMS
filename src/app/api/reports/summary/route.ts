@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentUser, ROLES, seesOnlyCreatedLeads, visibleDealerIds, visibleDepartments } from '@/lib/auth';
-import { LEAD_STATUSES, LEAD_PRIORITIES } from '@/lib/lead-filters';
+import { LEAD_STATUSES, LEAD_PRIORITIES, LEAD_SOURCES } from '@/lib/lead-filters';
 
 // GET /api/reports/summary — aggregated report with role scoping
 // Query params: from_date, to_date, dealer_id, brand_id, department, status, source, assigned_user_id, role
@@ -13,8 +13,10 @@ export async function GET(req: NextRequest) {
   const filters = req.nextUrl.searchParams;
   const requestedStatus = filters.get('status');
   const requestedPriority = filters.get('priority');
+  const requestedSource = filters.get('source');
   if (requestedStatus && !(LEAD_STATUSES as readonly string[]).includes(requestedStatus)) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   if (requestedPriority && !(LEAD_PRIORITIES as readonly string[]).includes(requestedPriority)) return NextResponse.json({ error: 'Invalid priority' }, { status: 400 });
+  if (requestedSource && !(LEAD_SOURCES as readonly string[]).includes(requestedSource)) return NextResponse.json({ error: 'Invalid source' }, { status: 400 });
   // Recycled leads are reported only in Recycle Bin, never in analytics.
   const conds: string[] = ["l.status <> 'recycled'"];
   const params: any[] = [];

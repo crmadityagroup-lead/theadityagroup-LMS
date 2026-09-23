@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { StatCard } from '@/components/ui-shared';
 import { ClipboardList, CheckCircle2, Target, Repeat, FileText, FileSpreadsheet } from 'lucide-react';
 import { DEPARTMENTS } from '@/lib/department-constants';
+import { LEAD_SOURCES } from '@/lib/lead-constants';
 import { toast } from 'sonner';
 
 export function ReportsPage() {
   const { isOperator, user } = useAuth();
   const [dealers, setDealers] = useState<any[]>([]);
-  const [filters, setFilters] = useState({ from_date: '', to_date: '', dealer_id: '', department: '', status: '' });
+  const [filters, setFilters] = useState({ from_date: '', to_date: '', dealer_id: '', department: '', status: '', source: '' });
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
@@ -84,12 +85,13 @@ export function ReportsPage() {
       </div> : null}
 
       <Card>
-        <CardContent className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 md:grid-cols-5">
+        <CardContent className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
           <div className="min-w-0"><Label className="text-xs">From Date</Label><Input className="cursor-pointer" type="date" value={filters.from_date} onChange={(e) => setFilters({ ...filters, from_date: e.target.value })} /></div>
           <div className="min-w-0"><Label className="text-xs">To Date</Label><Input className="cursor-pointer" type="date" value={filters.to_date} onChange={(e) => setFilters({ ...filters, to_date: e.target.value })} /></div>
           {isOperator() && <div><Label className="text-xs">Dealer</Label><Select value={filters.dealer_id} onValueChange={(v) => setFilters({ ...filters, dealer_id: v })}><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent>{dealers.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}</SelectContent></Select></div>}
           <div><Label className="text-xs">Department</Label><Select value={filters.department} onValueChange={(v) => setFilters({ ...filters, department: v })}><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select></div>
           <div><Label className="text-xs">Status</Label><Select value={filters.status} onValueChange={(v) => setFilters({ ...filters, status: v })}><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent>{['new','in_progress','follow_up','converted','closed','lost','recycled'].map(s => <SelectItem key={s} value={s}>{s.replace('_',' ')}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label className="text-xs">Source</Label><Select value={filters.source} onValueChange={(v) => setFilters({ ...filters, source: v })}><SelectTrigger><SelectValue placeholder="All sources" /></SelectTrigger><SelectContent>{LEAD_SOURCES.map((source) => <SelectItem key={source} value={source}>{source}</SelectItem>)}</SelectContent></Select></div>
         </CardContent>
       </Card>
 

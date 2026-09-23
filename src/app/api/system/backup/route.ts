@@ -21,6 +21,23 @@ const backupModels = {
   login_history: 'crmLoginHistory',
 } as const;
 
+const backupTables = {
+  dealers: 'crm_dealers',
+  brands: 'crm_brands',
+  models: 'crm_models',
+  enquiry_categories: 'crm_enquiry_categories',
+  enquiry_types: 'crm_enquiry_types',
+  users: 'crm_users',
+  support_tickets: 'crm_support_tickets',
+  otp_codes: 'crm_otp_codes',
+  user_enquiry_types: 'crm_user_enquiry_types',
+  leads: 'crm_leads',
+  lead_activities: 'crm_lead_activities',
+  lead_followups: 'crm_lead_followups',
+  department_updates: 'crm_department_updates',
+  login_history: 'crm_login_history',
+} as const;
+
 function serialize(value: any): any {
   if (value instanceof Date) return value.toISOString();
   if (Array.isArray(value)) return value.map(serialize);
@@ -108,10 +125,16 @@ export async function POST(request: NextRequest) {
       await insert('lead_followups', 'crmLeadFollowup');
       await insert('department_updates', 'crmDepartmentUpdate');
       await insert('login_history', 'crmLoginHistory');
+
+      // Explicit IDs from a backup do not advance PostgreSQL sequences. Reset
+      // every restored table's sequence so the next record cannot collide with
+      // an ID that was just restored.
+      await Promise.all(Object.values(backupTables).map((table) => tx.$executeRawUnsafe(
+        `SELECT setval(pg_get_serial_sequence('${table}', 'id'), COALESCE((SELECT MAX(id) FROM ${table}), 1), (SELECT COUNT(*) > 0 FROM ${table}))`,
+      )));
     }, { timeout: 60000 });
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || 'Restore failed' }, { status: 500 });
   }
   return NextResponse.json({ restored: true, message: 'Backup data restored. Existing records were preserved.' });
 }
-
