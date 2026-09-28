@@ -132,7 +132,7 @@ function formatActivityDetails(action: string, details: any) {
 }
 
 export function LeadDetailPage({ leadId, navigate }: { leadId: number; navigate: NavigateFn }) {
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
@@ -399,7 +399,7 @@ export function LeadDetailPage({ leadId, navigate }: { leadId: number; navigate:
                     <div><Label>Secondary Number</Label><Input value={editForm.secondary_number} onChange={(e) => setEditForm((current) => ({ ...current, secondary_number: e.target.value }))} /></div>
                     <div><Label>Email</Label><Input type="email" value={editForm.email} onChange={(e) => setEditForm((current) => ({ ...current, email: e.target.value }))} /></div>
                     <div><Label>Location *</Label><Input value={editForm.location} onChange={(e) => setEditForm((current) => ({ ...current, location: e.target.value }))} /></div>
-                    <div><Label>Source *</Label><Select value={editForm.source} onValueChange={(value) => setEditForm((current) => ({ ...current, source: value, referral_customer_name: value === 'Reference' ? current.referral_customer_name : '' }))}><SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger><SelectContent>{LEAD_SOURCES.map((source) => <SelectItem key={source} value={source}>{source}</SelectItem>)}</SelectContent></Select></div>
+                    <div><Label>Source *</Label><Select value={editForm.source} onValueChange={(value) => setEditForm((current) => ({ ...current, source: value, referral_customer_name: value === 'Reference' ? current.referral_customer_name : '' }))} disabled={!isSuperAdmin()}><SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger><SelectContent>{LEAD_SOURCES.map((source) => <SelectItem key={source} value={source}>{source}</SelectItem>)}</SelectContent></Select></div>
                     {editForm.source === 'Reference' && <div><Label>Reference Customer Name *</Label><Input value={editForm.referral_customer_name} onChange={(e) => setEditForm((current) => ({ ...current, referral_customer_name: e.target.value }))} required /></div>}
                   </div></div>
                   <div><CardTitle className="mb-3 text-sm">Dealer &amp; Vehicle</CardTitle><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

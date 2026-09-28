@@ -61,6 +61,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!authorizeLeadAction(user, target, 'UPDATE')) return NextResponse.json({ error: 'No access to update this lead' }, { status: 403 });
 
   const b = await req.json();
+  if (b.source !== undefined && b.source !== lead.source && user.role !== 'super_admin') {
+    return NextResponse.json({ error: 'Only super admins can change a lead source' }, { status: 403 });
+  }
   const updates: any = {};
   const allowed = ['customer_name', 'mobile', 'priority', 'status', 'initial_remarks', 'next_followup_date', 'source', 'referral_customer_name', 'variant', 'registration_number', 'location', 'secondary_number', 'email'];
   for (const k of allowed) {

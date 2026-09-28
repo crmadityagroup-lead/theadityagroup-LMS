@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { DEPARTMENTS } from '@/lib/department-constants';
 
 interface NavigateFn { (route: string, arg?: any): void; }
-interface Lead { id: number; lead_code: string; customer_name: string; mobile: string; dealer_name: string; brand_name: string; model_name: string; enquiry_type_name: string; department: string; priority: string; status: string; assigned_user_name: string; created_by_name: string; created_at: string; }
+interface Lead { id: number; lead_code: string; customer_name: string; mobile: string; dealer_name: string; brand_name: string; model_name: string; enquiry_type_name: string; department: string; source: string | null; priority: string; status: string; assigned_user_name: string; created_by_name: string; created_at: string; }
 
 export function LeadsPage({ navigate, highlightId }: { navigate: NavigateFn; highlightId?: number }) {
   const { user, isAdmin, isOperator } = useAuth();
@@ -129,7 +129,7 @@ export function LeadsPage({ navigate, highlightId }: { navigate: NavigateFn; hig
            error ? <div className="p-8 text-center"><AlertTriangle className="h-8 w-8 mx-auto text-red-500 mb-2" /><p className="text-sm">{error}</p></div> :
            leads.length === 0 ? <EmptyState icon={ClipboardList} title="No leads found" message="Try adjusting filters or create a new lead." /> :
            <div className="overflow-x-auto">
-             <table className="mx-auto min-w-[980px] w-full text-sm">
+             <table className="mx-auto min-w-[1060px] w-full text-sm">
                <thead className="border-b text-muted-foreground">
                  <tr>
                    {isAdmin() && <th className="w-10 py-2 px-3"><Checkbox checked={leads.length > 0 && selectedIds.length === leads.length} onCheckedChange={toggleAllLeads} aria-label="Select all leads" /></th>}
@@ -137,6 +137,7 @@ export function LeadsPage({ navigate, highlightId }: { navigate: NavigateFn; hig
                    <th className="text-left py-2 px-3 font-medium">Customer</th>
                    <th className="text-left py-2 px-3 font-medium">Dealer / Vehicle</th>
                    <th className="text-left py-2 px-3 font-medium">Enquiry</th>
+                   <th className="text-left py-2 px-3 font-medium">Source</th>
                    <th className="text-left py-2 px-3 font-medium">Priority</th>
                    <th className="text-left py-2 px-3 font-medium">Status</th>
                    <th className="text-left py-2 px-3 font-medium">Assigned To</th>
@@ -151,6 +152,7 @@ export function LeadsPage({ navigate, highlightId }: { navigate: NavigateFn; hig
                      <td className="py-2 px-3">{l.customer_name}<br /><span className="text-xs text-muted-foreground">{l.mobile}</span></td>
                      <td className="py-2 px-3">{l.dealer_name}<br /><span className="text-xs text-muted-foreground">{l.brand_name} {l.model_name}</span></td>
                      <td className="py-2 px-3">{l.enquiry_type_name}<br /><span className="text-xs text-muted-foreground">{l.department}</span></td>
+                     <td className="py-2 px-3 text-xs">{l.source || '—'}</td>
                      <td className="py-2 px-3"><PriorityBadge priority={l.priority} /></td>
                      <td className="py-2 px-3"><StatusBadge status={l.status} /></td>
                      <td className="py-2 px-3 text-xs">{l.assigned_user_name || '—'}</td>

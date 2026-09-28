@@ -25,6 +25,7 @@ import { ProfilePage } from '@/components/pages/profile-page';
 import { HelpCenter } from '@/components/help-center';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { ClearAppCacheButton } from '@/components/clear-app-cache-button';
+import { RefreshAppButton } from '@/components/refresh-app-button';
 import {
   LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen, Server,
 } from 'lucide-react';
@@ -90,6 +91,7 @@ export function AppShell() {
 
   const allowedTabs = ROLE_TABS[normalizeRole(user.role)] || [];
   const navItems = PAGES.filter((p) => allowedTabs.includes(p.key));
+  const canClearCache = ['super_admin', 'admin', 'admin_2'].includes(normalizeRole(user.role));
 
   function renderPage() {
     switch (route) {
@@ -193,6 +195,7 @@ export function AppShell() {
             </span>
           )}
           <div className="ml-auto flex items-center gap-2">
+            <RefreshAppButton />
             <NotificationsBell />
             <HelpCenter />
             <UniversalSearch navigate={navigate} />
@@ -215,7 +218,7 @@ export function AppShell() {
         </footer>
       </div>
 
-      <ClearAppCacheButton canClear={['super_admin', 'admin', 'admin_2'].includes(normalizeRole(user.role))} />
+      <ClearAppCacheButton canClear={canClearCache} />
 
       <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <AlertDialogContent>

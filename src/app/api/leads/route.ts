@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true, leadCode: true, customerName: true, mobile: true, email: true,
         dealerId: true, brandId: true, modelId: true, enquiryCategoryId: true, enquiryTypeId: true,
-        department: true, assignedUserId: true, priority: true, status: true, createdBy: true, createdAt: true,
+        department: true, source: true, assignedUserId: true, priority: true, status: true, createdBy: true, createdAt: true,
         dealer: { select: { name: true, code: true, brand: true } },
         brand: { select: { name: true } },
         model: { select: { name: true } },
