@@ -10,7 +10,7 @@ export function RefreshAppButton() {
   function refreshApp() {
     if (refreshing) return;
     setRefreshing(true);
-    window.dispatchEvent(new CustomEvent('crm:refresh'));
+    window.location.reload();
     window.setTimeout(() => setRefreshing(false), 650);
   }
 
