@@ -46,8 +46,11 @@ function readCachedUser(): CrmUser | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<CrmUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Render a previously validated user immediately, then verify its httpOnly
+  // session cookie in the background. This removes the blank startup wait on
+  // normal return visits without trusting stale data for authorization.
+  const [user, setUser] = useState<CrmUser | null>(() => readCachedUser());
+  const [loading, setLoading] = useState(() => !readCachedUser());
   const router = useRouter();
 
   const refresh = useCallback(async (): Promise<CrmUser | null> => {
@@ -73,11 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const cachedUser = readCachedUser();
-    if (cachedUser) {
-      setUser(cachedUser);
-      setLoading(false);
-    }
     void refresh();
   }, [refresh]);
 

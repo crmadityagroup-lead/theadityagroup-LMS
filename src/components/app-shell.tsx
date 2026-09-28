@@ -78,6 +78,7 @@ export function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   function navigate(r: string, arg: any = null) {
     setRoute(r);
@@ -89,6 +90,12 @@ export function AppShell() {
   useEffect(() => {
     (window as any).App = { navigate, currentRoute: route };
   }, [route]);
+
+  useEffect(() => {
+    const refreshCurrentPage = () => setRefreshVersion((version) => version + 1);
+    window.addEventListener('crm:refresh', refreshCurrentPage);
+    return () => window.removeEventListener('crm:refresh', refreshCurrentPage);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -227,7 +234,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto w-full">{renderPage()}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1440px] mx-auto w-full"><div key={`${route}-${routeArg ?? ''}-${refreshVersion}`}>{renderPage()}</div></main>
         <footer className="px-4 py-3 text-center text-xs text-muted-foreground border-t border-border">
           &copy; 2026 Aditya Group. All Rights Reserved.
         </footer>
