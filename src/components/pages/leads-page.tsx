@@ -59,6 +59,12 @@ export function LeadsPage({ navigate, highlightId }: { navigate: NavigateFn; hig
     return () => window.clearTimeout(timer);
   }, [load]);
 
+  useEffect(() => {
+    const refreshLeads = () => void load();
+    window.addEventListener('crm:refresh', refreshLeads);
+    return () => window.removeEventListener('crm:refresh', refreshLeads);
+  }, [load]);
+
   function applyFilters() { setOffset(0); }
   function resetFilters() { setSearch(''); setStatus(''); setPriority(''); setDepartment(''); setOffset(0); }
   function toggleLead(id: number) {

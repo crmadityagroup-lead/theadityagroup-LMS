@@ -10,7 +10,8 @@ export function RefreshAppButton() {
   function refreshApp() {
     if (refreshing) return;
     setRefreshing(true);
-    window.location.reload();
+    window.dispatchEvent(new CustomEvent('crm:refresh'));
+    window.setTimeout(() => setRefreshing(false), 650);
   }
 
   return (
@@ -20,7 +21,6 @@ export function RefreshAppButton() {
       variant="ghost"
       className="relative h-9 w-9 !bg-transparent hover:!bg-transparent hover:!text-current focus-visible:!bg-transparent active:!bg-transparent"
       onClick={refreshApp}
-      disabled={refreshing}
       title="Refresh app"
       aria-label="Refresh app"
     >

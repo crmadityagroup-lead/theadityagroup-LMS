@@ -179,6 +179,12 @@ export function LeadDetailPage({ leadId, navigate }: { leadId: number; navigate:
     setData(d);
   }
 
+  useEffect(() => {
+    const refreshLead = () => { void refresh(); };
+    window.addEventListener('crm:refresh', refreshLead);
+    return () => window.removeEventListener('crm:refresh', refreshLead);
+  }, [leadId]);
+
   async function changeStatus() {
     if (saving) return;
     setSaving(true);

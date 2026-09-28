@@ -26,6 +26,7 @@ import { HelpCenter } from '@/components/help-center';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { ClearAppCacheButton } from '@/components/clear-app-cache-button';
 import { RefreshAppButton } from '@/components/refresh-app-button';
+import { api } from '@/lib/api-client';
 import {
   LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen, Server,
 } from 'lucide-react';
@@ -86,6 +87,17 @@ export function AppShell() {
   useEffect(() => {
     (window as any).App = { navigate, currentRoute: route };
   }, [route]);
+
+  useEffect(() => {
+    if (!user) return;
+    const reportPresence = () => {
+      if (document.visibilityState === 'visible') void api.post('/users/presence', { page: route, route_arg: routeArg }).catch(() => {});
+    };
+    reportPresence();
+    const timer = window.setInterval(reportPresence, 30000);
+    document.addEventListener('visibilitychange', reportPresence);
+    return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', reportPresence); };
+  }, [user, route, routeArg]);
 
   if (!user) return null;
 
