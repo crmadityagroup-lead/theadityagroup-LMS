@@ -22,13 +22,14 @@ import { BackupPage } from '@/components/pages/backup-page';
 import { SupportTicketsPage } from '@/components/pages/support-tickets-page';
 import { DatabaseHealthPage } from '@/components/pages/database-health-page';
 import { ProfilePage } from '@/components/pages/profile-page';
+import { LeadEscalationPage } from '@/components/pages/lead-escalation-page';
 import { HelpCenter } from '@/components/help-center';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { ClearAppCacheButton } from '@/components/clear-app-cache-button';
 import { RefreshAppButton } from '@/components/refresh-app-button';
 import { api } from '@/lib/api-client';
 import {
-  LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen, Server,
+  LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen, Server, BellRing,
 } from 'lucide-react';
 
 interface NavItem {
@@ -52,10 +53,11 @@ const PAGES: NavItem[] = [
   { key: 'backup', label: 'Backup & Restore', icon: DatabaseBackup, roles: ['super_admin'] },
   { key: 'support-tickets', label: 'Help Requests', icon: HelpCircle, roles: ['super_admin'] },
   { key: 'database-health', label: 'Database Health', icon: Server, roles: ['super_admin', 'admin'] },
+  { key: 'lead-escalation', label: 'Lead Escalation', icon: BellRing, roles: ['super_admin'] },
 ];
 
 const ROLE_TABS: Record<string, string[]> = {
-  super_admin: ['dashboard', 'leads', 'models', 'users', 'reports', 'performance', 'login-history', 'recycle-bin', 'theme', 'backup', 'support-tickets', 'database-health'],
+  super_admin: ['dashboard', 'leads', 'models', 'users', 'reports', 'performance', 'login-history', 'recycle-bin', 'theme', 'backup', 'support-tickets', 'database-health', 'lead-escalation'],
   admin: ['dashboard', 'leads', 'reports', 'performance', 'recycle-bin', 'database-health'],
   admin_2: ['dashboard', 'leads', 'reports', 'performance', 'recycle-bin'],
   data_operator_1: ['dashboard', 'leads', 'leads-new', 'reports'],
@@ -121,6 +123,7 @@ export function AppShell() {
       case 'backup': return normalizeRole(user?.role || '') === 'super_admin' ? <BackupPage /> : <DashboardPage navigate={navigate} />;
       case 'support-tickets': return normalizeRole(user?.role || '') === 'super_admin' ? <SupportTicketsPage /> : <DashboardPage navigate={navigate} />;
       case 'database-health': return ['super_admin', 'admin'].includes(normalizeRole(user?.role || '')) ? <DatabaseHealthPage /> : <DashboardPage navigate={navigate} />;
+      case 'lead-escalation': return normalizeRole(user?.role || '') === 'super_admin' ? <LeadEscalationPage /> : <DashboardPage navigate={navigate} />;
       case 'profile': return <ProfilePage navigate={navigate} />;
       default: return <DashboardPage navigate={navigate} />;
     }
