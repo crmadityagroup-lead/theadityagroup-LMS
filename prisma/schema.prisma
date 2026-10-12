@@ -164,6 +164,20 @@ model CrmSupportTicket {
   @@map("crm_support_tickets")
 }
 
+model CrmGoogleSheetResponse {
+  id         Int      @id @default(autoincrement())
+  sheetId    String   @map("sheet_id")
+  sheetName  String   @map("sheet_name")
+  rowNumber  Int      @map("row_number")
+  response   Json
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([sheetId, sheetName, rowNumber])
+  @@index([createdAt])
+  @@map("crm_google_sheet_responses")
+}
+
 model CrmOtpCode {
   id        Int      @id @default(autoincrement())
   email     String
