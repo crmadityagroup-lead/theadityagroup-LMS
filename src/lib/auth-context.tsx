@@ -35,22 +35,12 @@ interface AuthCtx {
 const Ctx = createContext<AuthCtx>(null as any);
 const CACHED_USER_KEY = 'crm-auth-user';
 
-function readCachedUser(): CrmUser | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const value = window.localStorage.getItem(CACHED_USER_KEY);
-    return value ? JSON.parse(value) as CrmUser : null;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Render a previously validated user immediately, then verify its httpOnly
-  // session cookie in the background. This removes the blank startup wait on
-  // normal return visits without trusting stale data for authorization.
-  const [user, setUser] = useState<CrmUser | null>(() => readCachedUser());
-  const [loading, setLoading] = useState(() => !readCachedUser());
+  // Start with identical state on the server and browser. Reading localStorage
+  // in a state initializer can render the authenticated shell only on the
+  // browser and cause a hydration mismatch.
+  const [user, setUser] = useState<CrmUser | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const refresh = useCallback(async (): Promise<CrmUser | null> => {

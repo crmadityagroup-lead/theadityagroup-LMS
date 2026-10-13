@@ -39,7 +39,7 @@ export function Logo({ className = '', variant = 'full', size = 32 }: LogoProps)
           alt="Aditya Group"
           width={size}
           height={size}
-          style={{ width: 'auto', height: 'auto' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
           priority
         />
       </div>
@@ -51,13 +51,13 @@ export function Logo({ className = '', variant = 'full', size = 32 }: LogoProps)
   const h = size;
   const w = Math.round(size * 1.3);
   return (
-    <div className={`flex items-center justify-center shrink-0 ${className}`} style={{ height: h }}>
+    <div className={`flex items-center justify-center shrink-0 ${className}`} style={{ width: w, height: h }}>
       <Image
         src={isDark ? '/logo.png' : '/logo-light.png'}
         alt="Aditya Group"
         width={w}
         height={h}
-        style={{ width: 'auto', height: '100%' }}
+        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         priority
       />
     </div>

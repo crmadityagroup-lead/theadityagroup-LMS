@@ -165,12 +165,14 @@ model CrmSupportTicket {
 }
 
 model CrmGoogleFormResponse {
-  id          Int      @id @default(autoincrement())
-  formId      String   @map("form_id")
-  responseId  String   @map("response_id")
-  submittedAt DateTime @map("submitted_at")
-  answers     Json
-  createdAt   DateTime @default(now()) @map("created_at")
+  id                Int       @id @default(autoincrement())
+  formId            String    @map("form_id")
+  responseId        String    @map("response_id")
+  submittedAt       DateTime  @map("submitted_at")
+  respondentEmail   String?   @map("respondent_email")
+  emailSentAt       DateTime? @map("email_sent_at")
+  answers           Json
+  createdAt         DateTime  @default(now()) @map("created_at")
 
   @@unique([formId, responseId])
   @@index([submittedAt])

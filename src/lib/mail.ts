@@ -91,6 +91,26 @@ export async function sendOtpEmail(email: string, code: string, name: string) {
   });
 }
 
+export async function sendGoogleFormConfirmationEmail(options: {
+  email: string;
+  answers: Array<{ question: string; answer: unknown }>;
+}) {
+  const from = process.env.SMTP_FROM || `Aditya Group <${process.env.SMTP_USER}>`;
+  const escapeHtml = (value: unknown) => String(value ?? '')
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+  const rows = options.answers.map(({ question, answer }) => {
+    const text = Array.isArray(answer) ? answer.join(', ') : String(answer ?? '');
+    return `<tr><td style="padding:9px 12px;border-bottom:1px solid #e5e7eb;color:#71717a">${escapeHtml(question)}</td><td style="padding:9px 12px;border-bottom:1px solid #e5e7eb;color:#18181b">${escapeHtml(text || '—')}</td></tr>`;
+  }).join('');
+  await sendMailWithFallback({
+    from,
+    to: options.email,
+    subject: 'We received your enquiry',
+    html: `<div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;color:#18181b"><h2>Thank you for contacting Aditya Group</h2><p>We received your form submission and our team will get in touch with you.</p><table style="width:100%;border-collapse:collapse">${rows}</table></div>`,
+  });
+}
+
 export async function sendLeadAssignmentEmail(options: {
   recipients: string[];
   leadCode: string;
