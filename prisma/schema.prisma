@@ -164,18 +164,17 @@ model CrmSupportTicket {
   @@map("crm_support_tickets")
 }
 
-model CrmGoogleSheetResponse {
-  id         Int      @id @default(autoincrement())
-  sheetId    String   @map("sheet_id")
-  sheetName  String   @map("sheet_name")
-  rowNumber  Int      @map("row_number")
-  response   Json
-  updatedAt  DateTime @updatedAt @map("updated_at")
-  createdAt  DateTime @default(now()) @map("created_at")
+model CrmGoogleFormResponse {
+  id          Int      @id @default(autoincrement())
+  formId      String   @map("form_id")
+  responseId  String   @map("response_id")
+  submittedAt DateTime @map("submitted_at")
+  answers     Json
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  @@unique([sheetId, sheetName, rowNumber])
-  @@index([createdAt])
-  @@map("crm_google_sheet_responses")
+  @@unique([formId, responseId])
+  @@index([submittedAt])
+  @@map("crm_google_form_responses")
 }
 
 model CrmOtpCode {

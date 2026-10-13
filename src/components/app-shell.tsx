@@ -23,14 +23,14 @@ import { SupportTicketsPage } from '@/components/pages/support-tickets-page';
 import { DatabaseHealthPage } from '@/components/pages/database-health-page';
 import { ProfilePage } from '@/components/pages/profile-page';
 import { LeadEscalationPage } from '@/components/pages/lead-escalation-page';
-import { GoogleSheetResponsesPage } from '@/components/pages/google-sheet-responses-page';
+import { GoogleFormResponsesPage } from '@/components/pages/google-form-responses-page';
 import { HelpCenter } from '@/components/help-center';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { ClearAppCacheButton } from '@/components/clear-app-cache-button';
 import { RefreshAppButton } from '@/components/refresh-app-button';
 import { api } from '@/lib/api-client';
 import {
-  LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen, Server, BellRing, Sheet,
+  LayoutDashboard, ClipboardList, Plus, Users, Car, BarChart3, TrendingUp, Clock, Recycle, Palette, DatabaseBackup, HelpCircle, LogOut, Menu, X, Building, PanelLeftClose, PanelLeftOpen, Server, BellRing, FileText,
 } from 'lucide-react';
 
 interface NavItem {
@@ -44,7 +44,7 @@ const PAGES: NavItem[] = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2', 'department_user'] },
   { key: 'leads', label: 'Leads', icon: ClipboardList, roles: ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2', 'department_user'] },
   { key: 'leads-new', label: 'Add Entry', icon: Plus, roles: ['data_operator_1', 'data_operator_2'] },
-  { key: 'sheet-responses', label: 'Sheet Responses', icon: Sheet, roles: ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2'] },
+  { key: 'google-form-responses', label: 'Google Form Responses', icon: FileText, roles: ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2'] },
   { key: 'models', label: 'Models', icon: Car, roles: ['super_admin'] },
   { key: 'users', label: 'Users', icon: Users, roles: ['super_admin'] },
   { key: 'reports', label: 'Reports', icon: BarChart3, roles: ['super_admin', 'admin', 'admin_2', 'data_operator_1', 'data_operator_2'] },
@@ -59,11 +59,11 @@ const PAGES: NavItem[] = [
 ];
 
 const ROLE_TABS: Record<string, string[]> = {
-  super_admin: ['dashboard', 'leads', 'sheet-responses', 'models', 'users', 'reports', 'performance', 'login-history', 'recycle-bin', 'theme', 'backup', 'support-tickets', 'database-health', 'lead-escalation'],
-  admin: ['dashboard', 'leads', 'sheet-responses', 'reports', 'performance', 'recycle-bin', 'database-health'],
-  admin_2: ['dashboard', 'leads', 'sheet-responses', 'reports', 'performance', 'recycle-bin'],
-  data_operator_1: ['dashboard', 'leads', 'leads-new', 'sheet-responses', 'reports'],
-  data_operator_2: ['dashboard', 'leads', 'leads-new', 'sheet-responses', 'reports'],
+  super_admin: ['dashboard', 'leads', 'google-form-responses', 'models', 'users', 'reports', 'performance', 'login-history', 'recycle-bin', 'theme', 'backup', 'support-tickets', 'database-health', 'lead-escalation'],
+  admin: ['dashboard', 'leads', 'google-form-responses', 'reports', 'performance', 'recycle-bin', 'database-health'],
+  admin_2: ['dashboard', 'leads', 'google-form-responses', 'reports', 'performance', 'recycle-bin'],
+  data_operator_1: ['dashboard', 'leads', 'leads-new', 'google-form-responses', 'reports'],
+  data_operator_2: ['dashboard', 'leads', 'leads-new', 'google-form-responses', 'reports'],
   department_user: ['dashboard', 'leads'],
 };
 const DEALER_LABELS: Record<number, string> = { 1: 'Aditya Motors', 2: 'Aditya Hyundai', 3: 'HighWay Honda' };
@@ -121,7 +121,7 @@ export function AppShell() {
       case 'dashboard': return <DashboardPage navigate={navigate} />;
       case 'leads': return <LeadsPage navigate={navigate} highlightId={routeArg} />;
       case 'leads-new': return <AddLeadPage navigate={navigate} />;
-      case 'sheet-responses': return <GoogleSheetResponsesPage />;
+      case 'google-form-responses': return <GoogleFormResponsesPage />;
       case 'lead-detail': return <LeadDetailPage leadId={routeArg} navigate={navigate} />;
       case 'models': return <ModelsPage />;
       case 'users': return <UsersPage />;
